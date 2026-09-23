@@ -8,4 +8,4 @@ spec:
       containers:
         - name: api
           # Updated by CI/CD pipeline
-          image: ghcr.io/simonbrundin/foodflow:ff9dd4bac6f1a8b260972f7347fa0c4a8d43d842
+          image: ghcr.io/simonbrundin/foodflow:7216d43f0d80de5254e896a636a1545cd0893cfa
