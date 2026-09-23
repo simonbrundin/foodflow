@@ -18,6 +18,9 @@ RUN pnpm install --frozen-lockfile
 # Kopiera källkod (efter install för bättre cache)
 COPY . .
 
+# Rensa eventuell gammal/cachad .nuxt med lokala sökvägar (kan finnas committad i repot)
+RUN rm -rf .nuxt .output && pnpm exec nuxi prepare
+
 # Bygg applikationen
 RUN pnpm run build
 
