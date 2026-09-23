@@ -1,7 +1,9 @@
 # ==============================
 # Build Stage
 # ==============================
-FROM node:lts-alpine AS build
+# Build Nuxt on the native builder architecture. The generated Nitro output is
+# JavaScript/assets, so this avoids QEMU crashes when publishing arm64 images.
+FROM --platform=$BUILDPLATFORM node:lts-alpine AS build
 WORKDIR /app
 
 RUN apk add --no-cache python3 make g++ gcc
