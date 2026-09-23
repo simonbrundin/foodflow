@@ -1,4 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+// Trigger workflow for multi-platform build
 
 import { fileURLToPath } from 'node:url'
 
