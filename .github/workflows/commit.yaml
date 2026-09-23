@@ -1,0 +1,68 @@
+name: CI för Nuxt applikation
+on:
+  push:
+    paths:
+      - src/nuxt/**
+      - .github/workflows/commit.yaml
+  workflow_dispatch:
+
+jobs:
+  build-publish-image:
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
+    uses: >-
+      simonbrundin/deployment-pipeline/.github/workflows/commit.build-publish-image.yaml@main
+    secrets:
+      REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+    with:
+      dockerfile: src/nuxt/Dockerfile
+      dockerfile-context: src/nuxt
+      registry: ghcr.io/simonbrundin/foodflow
+      platforms: linux/amd64,linux/arm64
+
+  update-deployment:
+    needs: build-publish-image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+          ref: main
+
+      - name: Install yq
+        run: |
+          wget -q https://github.com/mikefarah/yq/releases/download/v4.35.1/yq_linux_amd64 \
+            -O /usr/local/bin/yq && chmod +x /usr/local/bin/yq
+
+      - name: Update deployment image
+        env:
+          IMAGE: ${{ needs.build-publish-image.outputs.image }}
+        run: |
+          echo "Updating image to: $IMAGE"
+          yq -i '.spec.template.spec.containers[0].image = strenv(IMAGE)' \
+            environments/production/patches/deployment.yaml
+          cat environments/production/patches/deployment.yaml
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update foodflow-app image [skip ci]"
+          branch: bot/update-foodflow-app-image
+          delete-branch: true
+          title: "chore: update foodflow-app image"
+          body: |
+            Automated image update from commit workflow
+            - Image: `${{ needs.build-publish-image.outputs.image }}`
+          labels: |
+            ci
+            skip-review
+          add-paths: |
+            environments/production/patches/deployment.yaml
