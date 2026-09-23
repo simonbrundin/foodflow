@@ -12,6 +12,13 @@
     "typecheck": "nuxt typecheck",
     "test": "vitest run"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "unrs-resolver",
+      "vue-demi"
+    ]
+  },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.134",
     "@nuxt/image": "^2.1.0",

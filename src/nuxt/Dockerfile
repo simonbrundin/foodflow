@@ -6,14 +6,15 @@ WORKDIR /app
 
 RUN apk add --no-cache python3 make g++ gcc
 
-# Installera pnpm globalt
-RUN npm install -g pnpm
+# Pinna pnpm via corepack (måste matcha packageManager i package.json)
+RUN corepack enable && corepack prepare pnpm@12.5.1 --activate
 
 # Kopiera bara det som behövs för install (cache-vänligt)
 COPY package.json pnpm-lock.yaml* ./
 
 # Installera beroenden
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile && \
+    pnpm rebuild esbuild unrs-resolver vue-demi
 
 # Kopiera källkod (efter install för bättre cache)
 COPY . .
