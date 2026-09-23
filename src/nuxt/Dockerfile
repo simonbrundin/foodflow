@@ -9,11 +9,14 @@ RUN apk add --no-cache python3 make g++ gcc
 # Pinna pnpm via corepack (måste matcha packageManager i package.json)
 RUN corepack enable && corepack prepare pnpm@12.5.1 --activate
 
-# Kopiera bara det som behövs för install (cache-vänligt)
+# Kopiera bara det som behövs för att hämta beroenden (cache-vänligt)
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 
-# Installera beroenden (allowBuilds konfig i pnpm-workspace.yaml styr builds)
-RUN pnpm install --frozen-lockfile
+# Hämta dependencies till pnpm store (cache-vänligt — bara lockfile ändras behöver ny hämtning)
+RUN pnpm fetch
+
+# Installera dependencies till node_modules (offline-läge efter fetch)
+RUN pnpm install --offline --frozen-lockfile
 
 # Kopiera källkod (efter install för bättre cache)
 COPY . .
