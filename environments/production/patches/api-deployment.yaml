@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foodflow-api
+spec:
+  template:
+    spec:
+      containers:
+        - name: api
+          # Updated by CI/CD pipeline
+          image: ghcr.io/simonbrundin/foodflow-api:latest

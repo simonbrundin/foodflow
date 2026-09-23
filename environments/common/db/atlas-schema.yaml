@@ -1,0 +1,16 @@
+apiVersion: db.atlasgo.io/v1alpha1
+kind: AtlasSchema
+metadata:
+  name: foodflow-db-schema
+  namespace: foodflow
+spec:
+  urlFrom:
+    secretKeyRef:
+      key: uri
+      name: foodflow-db-admin
+  schema:
+    configMapKeyRef:
+      key: schema.sql
+      name: foodflow-db-schema
+  schemas:
+    - "public"

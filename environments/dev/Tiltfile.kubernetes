@@ -1,0 +1,4 @@
+# Tilt configuration for Kubernetes development
+
+# Apply Kubernetes manifests from dev environment
+k8s_yaml('./kustomization.yaml')

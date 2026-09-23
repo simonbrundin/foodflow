@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foodflow-api
+  labels:
+    app: foodflow-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: foodflow-api
+  template:
+    metadata:
+      labels:
+        app: foodflow-api
+    spec:
+      containers:
+        - name: api
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: PORT
+              value: "8080"
+            - name: NUXT_PRESET
+              value: "node-server"
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: foodflow-db-user
+                  key: host
+            - name: PGPORT
+              value: "5432"
+            - name: PGDATABASE
+              value: "foodflow"
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: foodflow-db-user
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: foodflow-db-user
+                  key: password
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /api/recipes
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/recipes
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20

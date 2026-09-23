@@ -1,0 +1,10 @@
+[tools]
+node = "20"
+pnpm = "latest"
+kubectl = "latest"
+kustomize = "latest"
+k9s = "latest"
+docker-compose = "latest"
+
+[settings]
+plugin_runtime_node_mirror = "https://npmmirror.com/mirrors/node/"

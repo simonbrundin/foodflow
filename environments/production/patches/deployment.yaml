@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foodflow-app
+spec:
+  template:
+    spec:
+      containers:
+        - name: foodflow-app
+          # Updated by CI/CD pipeline
+          image: ghcr.io/simonbrundin/foodflow:frontend-latest
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: NUXT_PUBLIC_APP_URL
+              value: "https://foodflow.simonbrundin.com"
+            - name: NUXT_PUBLIC_API_URL
+              value: "https://foodflow.simonbrundin.com/api"

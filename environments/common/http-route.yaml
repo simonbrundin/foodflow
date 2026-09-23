@@ -1,0 +1,27 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: foodflow-route
+  namespace: foodflow
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: simons-gateway
+      namespace: envoy
+  hostnames:
+    - "foodflow.simonbrundin.com"
+  rules:
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: foodflow-service
+          port: 80
+          weight: 1
+          namespace: foodflow
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+      timeouts:
+        request: 30s

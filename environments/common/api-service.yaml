@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: foodflow-api-service
+  labels:
+    app: foodflow-api
+spec:
+  selector:
+    app: foodflow-api
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

@@ -1,0 +1,11 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: foodflow-db
+spec:
+  bootstrap:
+    initdb:
+      postInitApplicationSQLRefs:
+        configMapRefs:
+          - name: foodflow-db-seed
+            key: seed-data.sql

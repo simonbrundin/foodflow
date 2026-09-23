@@ -1,0 +1,7 @@
+# SOPS public key for encryption
+# Add this to your .sops.yaml configuration
+
+creation_rules:
+  - path_regex: .*.yaml$
+    encrypted_regex: ^(data|stringData)$
+    age: age1yourrecipient

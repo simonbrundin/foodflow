@@ -1,0 +1,51 @@
+# ==================================================================
+# Foodflow Development Environment
+#
+# Access the app at: http://localhost:3000
+# pg-view: http://localhost:5050 (auto-starts with postgres)
+# ==================================================================
+
+# PostgreSQL setup
+local_resource(
+    "postgres",
+    cmd = ["sh", "-c", """
+        docker network create foodflow-net 2>/dev/null || true
+        docker rm -f foodflow-dev-postgres 2>/dev/null || true
+        docker run -d --name foodflow-dev-postgres --network foodflow-net -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=foodflow -p 5433:5432 postgres:16-alpine
+        
+        # Wait for postgres to be ready
+        for i in $(seq 1 30); do
+            docker exec foodflow-dev-postgres pg_isready -U postgres && break
+            sleep 1
+        done
+        
+        # Run schema.sql
+        docker exec -i foodflow-dev-postgres psql -U postgres -d foodflow < /home/simon/repos/foodflow/environments/dev/db/schema.sql
+        echo 'PostgreSQL started with schema'
+    """],
+    labels = ["Database"],
+    auto_init = True,
+)
+
+# pg-view setup
+local_resource(
+    "pgview",
+    cmd = ["sh", "-c", """
+        docker rm -f pgview 2>/dev/null || true
+        docker run -d --name pgview --network foodflow-net -p 5050:3000 -e DB_URL=postgresql://postgres:postgres@foodflow-dev-postgres:5432/foodflow lcurrol/pg-view
+        echo 'pg-view started successfully'
+    """],
+    labels = ["Database"],
+    auto_init = True,
+    resource_deps = ["postgres"],
+)
+
+# Nuxt dev server
+local_resource(
+    "dev",
+    serve_cmd = ["pnpm", "dev", "--port", "0"],
+    serve_dir = "../../src/nuxt",
+    labels = ["Frontend"],
+    resource_deps = ["postgres"],
+    auto_init = True,
+)

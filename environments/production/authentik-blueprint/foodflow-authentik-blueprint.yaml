@@ -1,0 +1,62 @@
+# Authentik Blueprint for Foodflow
+# This creates the necessary OAuth2 application in Authentik
+
+apiVersion: config.acc.uk.ac.be/v1alpha1
+kind: Blueprint
+metadata:
+  name: foodflow-authentik
+  labels:
+    app: foodflow
+    type: oauth2-application
+spec:
+  contexts:
+    authentik:
+      by_slug:
+        default-application: true
+  resources:
+    - apiVersion: authentik.caos.de/v1
+      kind: Application
+      metadata:
+        name: foodflow
+        labels:
+          app: foodflow
+      spec:
+        name: Foodflow
+        slug: foodflow
+        protocol: protocol-oauth2
+        group: foodflow
+
+    - apiVersion: authentik.caos.de/v1
+      kind: OAuth2Provider
+      metadata:
+        name: foodflow-provider
+        labels:
+          app: foodflow
+      spec:
+        name: Foodflow OAuth2 Provider
+        client_mode: confidential
+        redirect_uris:
+          - "https://foodflow.simonbrundin.com/api/auth/callback"
+          - "http://localhost:3000/api/auth/callback"
+        signing_key: signing-key
+        redirect_uris_regex: false
+        issuer_mode: implicit
+        subject: preferred_username
+        claims:
+          include_claims:
+            - email
+            - email_verified
+            - given_name
+            - family_name
+            - preferred_username
+
+    - apiVersion: authentik.caos.de/v1
+      kind: Source
+      metadata:
+        name: foodflow-saml
+        labels:
+          app: foodflow
+      spec:
+        name: Foodflow
+        slug: foodflow-saml
+        enabled: true

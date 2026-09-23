@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foodflow-app
+  labels:
+    app: foodflow-app
+spec:
+  selector:
+    matchLabels:
+      app: foodflow-app
+  template:
+    metadata:
+      labels:
+        app: foodflow-app
+    spec:
+      enableServiceLinks: false
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: foodflow-app
+          image: ghcr.io/simonbrundin/foodflow:frontend-latest
+          ports:
+            - containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
