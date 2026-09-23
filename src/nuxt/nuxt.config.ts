@@ -1,5 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
+import { fileURLToPath } from 'node:url'
+
 export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@nuxt/ui', '@nuxt/image', '@pinia/nuxt'],
 
@@ -7,9 +9,13 @@ export default defineNuxtConfig({
     compatibilityVersion: 4
   },
 
-  // Note: aliases (`~`, `~~`, `~/server`) are managed automatically by Nuxt 4
-  // based on the project rootDir. Do not hardcode absolute paths here — they
-  // break Docker/CI builds where the project lives at a different path.
+  // Alias-override: i Nuxt 4 antas `~/server` peka på `app/server`, men det här
+  // projektet har `server/` direkt i rootDir. Vi åsidosätter bara `~/server` och
+  // låter `~` / `~~` hanteras automatiskt av Nuxt.
+  alias: {
+    '~/server': fileURLToPath(new URL('./server', import.meta.url))
+  },
+  // `~` / `~~` hanteras automatiskt av Nuxt 4 från rootDir — inga absoluta paths.
 
   devtools: {
     enabled: false
