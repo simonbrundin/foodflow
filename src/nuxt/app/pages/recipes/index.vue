@@ -9,6 +9,7 @@ const filters = reactive({
 })
 
 const showImport = ref(false)
+const quickImportUrl = ref('')
 
 const { data: recipes, pending } = await useFetch<Recipe[]>('/api/recipes', {
   query: computed(() => ({
@@ -50,6 +51,29 @@ async function handleRecipeSaved(recipeId: string) {
   // Refresh recipes list
   navigateTo(`/recipes/${recipeId}`)
 }
+
+async function quickImportFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText()
+    if (!text) {
+      return
+    }
+    
+    // Check if it looks like a URL
+    const urlPattern = /^https?:\/\//i
+    if (urlPattern.test(text.trim())) {
+      // Open import modal with the URL pre-filled
+      quickImportUrl.value = text.trim()
+      showImport.value = true
+    } else {
+      // Not a URL, open normal import
+      showImport.value = true
+    }
+  } catch (e) {
+    // Fallback to normal import
+    showImport.value = true
+  }
+}
 </script>
 
 <template>
@@ -65,6 +89,10 @@ async function handleRecipeSaved(recipeId: string) {
         <UButton color="primary" @click="showImport = true">
           <UIcon name="i-lucide-download" class="mr-2 h-4 w-4" />
           Importera
+        </UButton>
+        <UButton color="secondary" variant="outline" @click="quickImportFromClipboard">
+          <UIcon name="i-lucide-clipboard-paste" class="mr-2 h-4 w-4" />
+          Från urklipp
         </UButton>
         <UButton variant="outline" to="/recipes/new">
           <UIcon name="i-lucide-plus" class="mr-2 h-4 w-4" />
@@ -161,7 +189,8 @@ async function handleRecipeSaved(recipeId: string) {
     <!-- Import Modal -->
     <RecipeImport
       :open="showImport"
-      @close="showImport = false"
+      :initial-url="quickImportUrl"
+      @close="showImport = false; quickImportUrl = ''"
       @saved="handleRecipeSaved"
     />
   </div>

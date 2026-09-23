@@ -3,9 +3,12 @@ import type { ParsedRecipe, IngredientType } from '~/types'
 
 interface Props {
   open: boolean
+  initialUrl?: string
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  initialUrl: ''
+})
 const emit = defineEmits<{
   close: []
   saved: [recipeId: string]
@@ -16,6 +19,7 @@ const pasteText = ref('')
 const url = ref('')
 const isLoading = ref(false)
 const isSaving = ref(false)
+const isImportingDirectly = ref(false)
 const error = ref('')
 
 // Import result
@@ -59,6 +63,18 @@ Häll av pastan och blanda direkt med äggblandningen.
 Tillsätt baconet och krydda med salt och peppar.
 Servera genast medan pastan är varm.`
 
+// Initialize from initialUrl prop
+watch(() => props.initialUrl, (newUrl) => {
+  if (newUrl && newUrl.trim()) {
+    url.value = newUrl.trim()
+    activeTab.value = 'url'
+    isImportingDirectly.value = true
+    nextTick(() => {
+      if (url.value) importFromURL()
+    })
+  }
+}, { immediate: true })
+
 async function importFromURL() {
   if (!url.value) {
     error.value = 'Ange en URL'
@@ -81,6 +97,33 @@ async function importFromURL() {
     error.value = e.data?.message || e.message || 'Import misslyckades'
   } finally {
     isLoading.value = false
+  }
+}
+
+async function quickImport() {
+  if (!url.value) {
+    error.value = 'Ange en URL'
+    return
+  }
+  
+  isLoading.value = true
+  error.value = ''
+  isSaving.value = true
+  
+  try {
+    const result = await $fetch('/api/recipes/quick-import', {
+      method: 'POST',
+      body: { url: url.value }
+    })
+    
+    emit('saved', result.id)
+    emit('close')
+    reset()
+  } catch (e: any) {
+    error.value = e.data?.message || e.message || 'Snabbimport misslyckades. Försök med "Importera & förhandsvisa" istället.'
+  } finally {
+    isLoading.value = false
+    isSaving.value = false
   }
 }
 
@@ -214,11 +257,40 @@ function reset() {
   importResult.value = null
   manualMappings.value = {}
   editedRecipe.value = {}
+  isImportingDirectly.value = false
 }
 
 function close() {
   emit('close')
   reset()
+}
+
+async function importFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText()
+    if (!text) {
+      error.value = 'Urklippet är tomt'
+      return
+    }
+    
+    // Check if it looks like a URL
+    const urlPattern = /^https?:\/\//i
+    if (urlPattern.test(text.trim())) {
+      url.value = text.trim()
+      activeTab.value = 'url'
+      isImportingDirectly.value = true
+      // Use quick import for URLs from clipboard
+      await quickImport()
+    } else {
+      // Treat as pasted text
+      pasteText.value = text
+      activeTab.value = 'paste'
+      isImportingDirectly.value = true
+      await importFromPaste()
+    }
+  } catch (e) {
+    error.value = 'Kunde inte läsa urklipp - ge sidan behörighet att komma åt urklipp'
+  }
 }
 
 function loadExample() {
@@ -248,7 +320,7 @@ function loadExample() {
         <!-- Content -->
         <div class="max-h-[calc(100vh-200px)] overflow-y-auto p-6">
           <!-- Tabs -->
-          <div class="mb-6 flex gap-2">
+          <div class="mb-6 flex flex-wrap gap-2">
             <UButton
               :variant="activeTab === 'paste' ? 'solid' : 'outline'"
               :color="activeTab === 'paste' ? 'primary' : 'gray'"
@@ -264,6 +336,15 @@ function loadExample() {
             >
               <UIcon name="i-lucide-link" class="mr-2 h-4 w-4" />
               Importera från URL
+            </UButton>
+            <UButton
+              color="secondary"
+              variant="outline"
+              :loading="isLoading"
+              @click="importFromClipboard"
+            >
+              <UIcon name="i-lucide-clipboard-paste" class="mr-2 h-4 w-4" />
+              Från urklipp
             </UButton>
           </div>
 
@@ -336,16 +417,32 @@ Pasta Carbonara
               </p>
             </div>
 
-            <UButton
-              color="primary"
-              size="lg"
-              :loading="isLoading"
-              :disabled="!url.trim()"
-              @click="importFromURL"
-            >
-              <UIcon name="i-lucide-download" class="mr-2 h-5 w-5" />
-              Importera
-            </UButton>
+            <div class="flex flex-wrap gap-3">
+              <UButton
+                color="primary"
+                size="lg"
+                :loading="isLoading"
+                :disabled="!url.trim()"
+                @click="importFromURL"
+              >
+                <UIcon name="i-lucide-eye" class="mr-2 h-5 w-5" />
+                Importera &amp; förhandsvisa
+              </UButton>
+              <UButton
+                color="secondary"
+                variant="outline"
+                size="lg"
+                :loading="isLoading"
+                :disabled="!url.trim()"
+                @click="quickImport"
+              >
+                <UIcon name="i-lucide-bolt" class="mr-2 h-5 w-5" />
+                Spara direkt
+              </UButton>
+            </div>
+            <p class="text-xs text-gray-500">
+              "Spara direkt" importerar och sparar utan förhandsvisning. Du kan redigera receptet efteråt.
+            </p>
           </div>
 
           <!-- Preview -->
