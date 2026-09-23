@@ -8,7 +8,7 @@ spec:
       containers:
         - name: foodflow-app
           # Updated by CI/CD pipeline
-          image: ghcr.io/simonbrundin/foodflow:frontend-latest
+          image: ghcr.io/simonbrundin/foodflow:ff9dd4bac6f1a8b260972f7347fa0c4a8d43d842
           env:
             - name: NODE_ENV
               value: "production"
