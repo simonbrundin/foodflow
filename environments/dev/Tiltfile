@@ -43,7 +43,7 @@ local_resource(
 # Nuxt dev server
 local_resource(
     "dev",
-    serve_cmd = ["pnpm", "dev", "--port", "0"],
+    serve_cmd = ["bun", "dev", "--port", "0"],
     serve_dir = "../../src/nuxt",
     labels = ["Frontend"],
     resource_deps = ["postgres"],
