@@ -26,7 +26,7 @@ spec:
         superuser: true
         passwordSecret:
           name: foodflow-db-admin
-      - name: user
+      - name: foodflow
         ensure: present
         login: true
         passwordSecret:
