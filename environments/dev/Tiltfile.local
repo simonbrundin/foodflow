@@ -5,7 +5,7 @@ docker_compose('./docker-compose.yml')
 # Watch Nuxt frontend for hot reload
 local_resource(
   'nuxt-dev',
-  cmd='cd ../src/nuxt && bun dev',
+  cmd='cd ../src/nuxt && bun run dev',
   deps=['../src/nuxt/app', '../src/nuxt/server'],
   ignore=['node_modules/**', '.git/**'],
   labels=['frontend'],
