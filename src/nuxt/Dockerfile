@@ -12,9 +12,8 @@ RUN corepack enable && corepack prepare pnpm@12.5.1 --activate
 # Kopiera bara det som behövs för install (cache-vänligt)
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 
-# Installera beroenden
-RUN pnpm install --frozen-lockfile && \
-    pnpm rebuild esbuild unrs-resolver vue-demi
+# Installera beroenden (allowBuilds konfig i pnpm-workspace.yaml styr builds)
+RUN pnpm install --frozen-lockfile
 
 # Kopiera källkod (efter install för bättre cache)
 COPY . .
