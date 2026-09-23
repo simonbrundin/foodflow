@@ -65,6 +65,7 @@ export interface Recipe {
   cookTime: number
   servings: number
   difficulty: RecipeDifficulty
+  rating?: number // 0-5 stars
   sourceUrl?: string
   sourceName?: string
   ingredients: RecipeIngredient[]
