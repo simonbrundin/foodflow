@@ -2,16 +2,14 @@
 
 export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@nuxt/ui', '@nuxt/image', '@pinia/nuxt'],
-  
+
   future: {
     compatibilityVersion: 4
   },
-  
-  alias: {
-    '~': '/home/simon/repos/foodflow/src/nuxt/app',
-    '~~': '/home/simon/repos/foodflow/src/nuxt',
-    '~/server': '/home/simon/repos/foodflow/src/nuxt/server'
-  },
+
+  // Note: aliases (`~`, `~~`, `~/server`) are managed automatically by Nuxt 4
+  // based on the project rootDir. Do not hardcode absolute paths here — they
+  // break Docker/CI builds where the project lives at a different path.
 
   devtools: {
     enabled: false
