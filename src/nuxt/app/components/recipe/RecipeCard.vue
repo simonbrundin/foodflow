@@ -50,11 +50,11 @@ async function handleRemove(entryId: string) {
 
 <template>
   <UCard
-    class="group overflow-hidden transition-all hover:shadow-lg"
-    :class="{ 'ring-2 ring-emerald-500': isInPlan }"
+    class="group overflow-hidden rounded-2xl border border-emerald-400/10 bg-slate-900/80 shadow-sm transition-all hover:-translate-y-1 hover:border-emerald-300/40 hover:shadow-xl hover:shadow-black/30"
+    :class="{ 'ring-2 ring-emerald-500 ring-offset-2': isInPlan }"
   >
     <!-- Image -->
-    <div class="relative aspect-[4/3] overflow-hidden bg-gray-100">
+    <div class="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-emerald-950/70 to-slate-800">
       <img
         v-if="recipe.imageUrl"
         :src="recipe.imageUrl"
@@ -73,7 +73,7 @@ async function handleRemove(entryId: string) {
 
       <!-- Difficulty Badge -->
       <div
-        class="absolute right-2 top-2 rounded-full px-2 py-1 text-xs font-medium"
+        class="absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs font-bold shadow-sm backdrop-blur-sm"
         :class="difficulty.color"
       >
         {{ difficulty.label }}
@@ -82,7 +82,7 @@ async function handleRemove(entryId: string) {
       <!-- In Week Plan Indicator (like Dinnia's cart indicator) -->
       <div
         v-if="isInPlan"
-        class="absolute left-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-sm font-bold text-white shadow-lg"
+        class="absolute left-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-sm font-extrabold text-white shadow-lg shadow-emerald-900/20"
         :title="`${totalServings} portioner i veckoplanen`"
       >
         {{ totalServings }}
@@ -90,8 +90,8 @@ async function handleRemove(entryId: string) {
     </div>
 
     <!-- Content -->
-    <div class="p-4">
-      <h3 class="line-clamp-1 text-lg font-semibold text-gray-900">
+    <div class="p-5">
+      <h3 class="line-clamp-1 text-lg font-extrabold tracking-tight text-slate-100">
         {{ recipe.title }}
       </h3>
 
@@ -100,7 +100,7 @@ async function handleRemove(entryId: string) {
       </p>
 
       <!-- Meta -->
-      <div class="mt-3 flex items-center gap-4 text-sm text-gray-500">
+      <div class="mt-4 flex items-center gap-4 text-xs font-semibold uppercase tracking-wide text-gray-400">
         <div class="flex items-center gap-1">
           <UIcon
             name="i-lucide-clock"
@@ -169,7 +169,7 @@ async function handleRemove(entryId: string) {
       <!-- Actions -->
       <div
         v-if="showActions"
-        class="mt-4 flex gap-2"
+        class="mt-5 flex gap-2"
       >
         <UButton
           :to="`/recipes/${recipe.id}`"

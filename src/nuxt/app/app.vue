@@ -1,5 +1,12 @@
 <script setup lang="ts">
-// Main layout
+useHead({
+  htmlAttrs: {
+    class: 'dark'
+  },
+  bodyAttrs: {
+    class: 'dark-theme'
+  }
+})
 </script>
 
 <template>

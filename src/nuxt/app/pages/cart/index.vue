@@ -28,11 +28,12 @@ function removeItem(itemId: string) {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="page-shell space-y-7">
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Varukorg</h1>
+        <p class="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">Din inköpslista</p>
+        <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-gray-950">Varukorg</h1>
         <p v-if="cart?.storeName" class="text-sm text-gray-500">
           Från {{ cart.storeName }}
         </p>
@@ -69,6 +70,7 @@ function removeItem(itemId: string) {
         <UCard
           v-for="(items, letter) in groupedItems"
           :key="letter"
+          class="surface-card border-0"
         >
           <template #header>
             <h2 class="text-lg font-semibold">{{ letter }}</h2>
@@ -141,7 +143,7 @@ function removeItem(itemId: string) {
 
       <!-- Summary -->
       <div class="lg:col-span-1">
-        <UCard class="sticky top-4">
+        <UCard class="surface-card sticky top-4 border-0">
           <template #header>
             <h2 class="text-lg font-semibold">Sammanfattning</h2>
           </template>

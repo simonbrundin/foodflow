@@ -192,11 +192,12 @@ function formatPrice(price: number): string {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="page-shell space-y-7">
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">
+        <p class="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">Planera veckan</p>
+        <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-gray-950">
           {{ weekPlan?.name || 'Veckan' }}
         </h1>
         <p class="text-sm text-gray-500">
@@ -216,10 +217,10 @@ function formatPrice(price: number): string {
     </div>
 
     <!-- Summary Card -->
-    <UCard>
+    <UCard class="surface-card border-0">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
-          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100">
             <UIcon name="i-lucide-calendar-check" class="h-6 w-6 text-emerald-600" />
           </div>
           <div>

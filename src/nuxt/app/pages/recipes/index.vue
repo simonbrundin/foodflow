@@ -53,10 +53,14 @@ async function handleRecipeSaved(recipeId: string) {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="page-shell space-y-7">
     <!-- Header -->
     <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-gray-900">Recept</h1>
+      <div>
+        <p class="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">Din samling</p>
+        <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-gray-950">Recept</h1>
+        <p class="mt-1 text-sm text-gray-500">Hitta nästa favorit till veckans meny.</p>
+      </div>
       <div class="flex gap-2">
         <UButton color="primary" @click="showImport = true">
           <UIcon name="i-lucide-download" class="mr-2 h-4 w-4" />
@@ -70,7 +74,7 @@ async function handleRecipeSaved(recipeId: string) {
     </div>
 
     <!-- Search & Filters -->
-    <UCard>
+    <UCard class="surface-card border-0">
       <div class="space-y-4">
         <!-- Search -->
         <UFormField label="Sök">
@@ -125,7 +129,7 @@ async function handleRecipeSaved(recipeId: string) {
       <USkeleton v-for="i in 8" :key="i" class="h-80 rounded-lg" />
     </div>
 
-    <div v-else-if="recipes && recipes.length > 0" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div v-else-if="recipes && recipes.length > 0" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <RecipeCard
         v-for="recipe in recipes"
         :key="recipe.id"

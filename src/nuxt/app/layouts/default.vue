@@ -11,16 +11,21 @@ const navigation = [
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="dark-theme min-h-screen">
     <!-- Desktop Layout -->
     <div class="hidden md:flex">
       <!-- Sidebar -->
-      <aside class="fixed left-0 top-0 z-40 h-screen w-64 border-r border-gray-200 bg-white">
+      <aside class="fixed left-0 top-0 z-40 h-screen w-64 border-r border-emerald-400/10 bg-slate-950/80 shadow-[12px_0_40px_-30px_rgba(0,0,0,0.8)] backdrop-blur-xl">
         <div class="flex h-full flex-col">
           <!-- Logo -->
-          <div class="flex h-16 items-center gap-2 border-b border-gray-200 px-6">
-            <UIcon name="i-lucide-leaf" class="h-8 w-8 text-emerald-500" />
-            <span class="text-xl font-bold text-gray-900">Foodflow</span>
+          <div class="flex h-20 items-center gap-3 border-b border-slate-700/50 px-6">
+            <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/25">
+              <UIcon name="i-lucide-leaf" class="h-5 w-5" />
+            </div>
+            <div>
+              <span class="block text-lg font-extrabold tracking-tight text-gray-950">Foodflow</span>
+              <span class="block text-[11px] font-medium uppercase tracking-[0.18em] text-emerald-600">Måltidsplanering</span>
+            </div>
           </div>
           
           <!-- Navigation -->
@@ -29,11 +34,11 @@ const navigation = [
               v-for="item in navigation"
               :key="item.to"
               :to="item.to"
-              class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+              class="group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-all"
               :class="[
                 route.path === item.to || (item.to !== '/' && route.path.startsWith(item.to))
-                  ? 'bg-emerald-50 text-emerald-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-emerald-400/15 text-emerald-300 shadow-sm shadow-emerald-950/30'
+                  : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-100'
               ]"
             >
               <UIcon :name="item.icon" class="h-5 w-5" />
@@ -42,9 +47,13 @@ const navigation = [
           </nav>
           
           <!-- Footer -->
-          <div class="border-t border-gray-200 p-4">
-            <p class="text-xs text-gray-500">
-              Planera din mat veckan
+          <div class="m-4 rounded-2xl border border-emerald-400/10 bg-emerald-400/10 p-4">
+            <div class="mb-2 flex items-center gap-2 text-emerald-300">
+              <UIcon name="i-lucide-sparkles" class="h-4 w-4" />
+              <span class="text-xs font-bold uppercase tracking-wider">Veckans fokus</span>
+            </div>
+            <p class="text-xs leading-relaxed text-emerald-100/65">
+              Planera smartare, handla enklare.
             </p>
           </div>
         </div>
@@ -52,7 +61,7 @@ const navigation = [
       
       <!-- Main Content -->
       <main class="pl-64">
-        <div class="mx-auto max-w-7xl p-8">
+        <div class="page-shell p-6 lg:p-10">
           <slot />
         </div>
       </main>
@@ -61,32 +70,34 @@ const navigation = [
     <!-- Mobile Layout -->
     <div class="md:hidden">
       <!-- Header -->
-      <header class="sticky top-0 z-30 border-b border-gray-200 bg-white">
+      <header class="sticky top-0 z-30 border-b border-slate-700/50 bg-slate-950/90 shadow-sm backdrop-blur-xl">
         <div class="flex h-14 items-center px-4">
-          <UIcon name="i-lucide-leaf" class="mr-2 h-6 w-6 text-emerald-500" />
-          <span class="text-lg font-bold text-gray-900">Foodflow</span>
+          <div class="mr-2 flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
+            <UIcon name="i-lucide-leaf" class="h-4 w-4" />
+          </div>
+          <span class="text-lg font-extrabold tracking-tight text-slate-100">Foodflow</span>
         </div>
       </header>
       
       <!-- Content -->
       <main class="pb-20">
-        <div class="p-4">
+        <div class="p-4 pt-6">
           <slot />
         </div>
       </main>
       
       <!-- Bottom Navigation -->
-      <nav class="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white">
+      <nav class="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-700/50 bg-slate-950/95 shadow-[0_-12px_30px_-24px_rgba(0,0,0,0.8)] backdrop-blur-xl">
         <div class="flex justify-around">
           <NuxtLink
             v-for="item in navigation"
             :key="item.to"
             :to="item.to"
-            class="flex flex-col items-center py-2 px-3"
+            class="flex flex-col items-center rounded-xl px-3 py-2"
             :class="[
               route.path === item.to || (item.to !== '/' && route.path.startsWith(item.to))
-                ? 'text-emerald-600'
-                : 'text-gray-500'
+                ? 'text-emerald-300'
+                : 'text-slate-500'
             ]"
           >
             <UIcon :name="item.icon" class="h-6 w-6" />

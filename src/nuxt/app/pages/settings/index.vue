@@ -69,9 +69,10 @@ async function testApiKey() {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="page-shell space-y-7">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Inställningar</h1>
+      <p class="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">Anpassa Foodflow</p>
+      <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-gray-950">Inställningar</h1>
       <p class="mt-1 text-sm text-gray-500">
         Hantera dina butiker, produktmappningar och inställningar
       </p>
@@ -96,7 +97,7 @@ async function testApiKey() {
     </div>
 
     <!-- API Key Card -->
-    <UCard>
+    <UCard class="surface-card border-0">
       <div class="space-y-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
