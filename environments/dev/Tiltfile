@@ -1,50 +1,138 @@
 # ==================================================================
 # Foodflow Development Environment
 #
-# Access the app at: http://localhost:3000
-# pg-view: http://localhost:5050 (auto-starts with postgres)
+# Access the app at: http://localhost:3500
+# pg-view: http://localhost:5050
+# ChartDB schema: http://localhost:8080/view.html  <- auto-loads schema in ChartDB
+# ChartDB raw: http://localhost:3501
+# Schema files: http://localhost:8080/schema.sql | diagram.sql
+#
+# Architecture:
+#   - postgres runs in docker, internal hostname: foodflow-dev-postgres:5432
+#   - Nuxt runs in docker with volume mount for hot reload
+#   - Schema is applied from db/schema.sql (version controlled in git)
+#   - Seed data is loaded by Nuxt's server/utils/seed-*.ts on startup
+#   - ChartDB visualizes the PostgreSQL schema (auto-loaded via URL)
 # ==================================================================
 
-# PostgreSQL setup
+# PostgreSQL setup - internal only, no external ports
+# Schema is applied from db/schema.sql (version controlled in git)
 local_resource(
     "postgres",
     cmd = ["sh", "-c", """
-        docker network create foodflow-net 2>/dev/null || true
         docker rm -f foodflow-dev-postgres 2>/dev/null || true
-        docker run -d --name foodflow-dev-postgres --network foodflow-net -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=foodflow -p 5433:5432 postgres:16-alpine
-        
-        # Wait for postgres to be ready
+        docker run -d \
+            --name foodflow-dev-postgres \
+            --network foodflow-net \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_DB=foodflow \
+            postgres:16-alpine
         for i in $(seq 1 30); do
             docker exec foodflow-dev-postgres pg_isready -U postgres && break
             sleep 1
         done
-        
-        # Run schema.sql
+
+        # Drop and recreate database for clean schema application
+        docker exec foodflow-dev-postgres psql -U postgres -c 'DROP DATABASE IF EXISTS foodflow;' 2>/dev/null || true
+        docker exec foodflow-dev-postgres psql -U postgres -c 'CREATE DATABASE foodflow;'
+
+        # Apply schema (authoritative source for db structure)
         docker exec -i foodflow-dev-postgres psql -U postgres -d foodflow < /home/simon/repos/foodflow/environments/dev/db/schema.sql
-        echo 'PostgreSQL started with schema'
+        echo 'Schema applied from db/schema.sql'
     """],
     labels = ["Database"],
     auto_init = True,
 )
 
-# pg-view setup
+# pg-view setup - internal connection to postgres
 local_resource(
     "pgview",
     cmd = ["sh", "-c", """
         docker rm -f pgview 2>/dev/null || true
-        docker run -d --name pgview --network foodflow-net -p 5050:3000 -e DB_URL=postgresql://postgres:postgres@foodflow-dev-postgres:5432/foodflow lcurrol/pg-view
-        echo 'pg-view started successfully'
+        docker run -d \
+            --name pgview \
+            --network foodflow-net \
+            -p 5050:3000 \
+            -e DB_URL=postgresql://postgres:postgres@foodflow-dev-postgres:5432/foodflow \
+            lcurrol/pg-view
+        echo 'pg-view started'
     """],
     labels = ["Database"],
-    auto_init = True,
     resource_deps = ["postgres"],
+    auto_init = True,
 )
 
-# Nuxt dev server
+# schema-server - serves the SQL schema files for visualization tools
+# Access at:
+#   http://localhost:8080/view.html  - ChartDB with schema auto-loaded (MAIN ENTRY)
+#   http://localhost:8080/schema.sql   - authoritative PostgreSQL schema
+#   http://localhost:8080/diagram.sql  - simplified version for visualization tools
 local_resource(
-    "dev",
-    serve_cmd = ["bun", "dev", "--port", "0"],
-    serve_dir = "../../src/nuxt",
+    "schema-server",
+    cmd = ["sh", "-c", """
+        # Generate view.html with ChartDB URL from diagram.sql
+        python3 /home/simon/repos/foodflow/environments/dev/scripts/gen-view.py
+
+        docker rm -f schema-server 2>/dev/null || true
+        docker run -d \
+            --name schema-server \
+            --network foodflow-net \
+            -p 8080:80 \
+            -v /home/simon/repos/foodflow/environments/dev/db:/usr/share/nginx/html:ro \
+            nginx:alpine
+        echo 'Schema server started'
+    """],
+    labels = ["Tools"],
+    auto_init = True,
+)
+
+# ChartDB - PostgreSQL schema visualizer (self-hosted)
+# Access at http://localhost:3501
+#
+# AUTO-LOAD SCHEMA (no manual import needed):
+#   http://localhost:8080/view.html  <- Main entry point (auto-opens ChartDB with schema)
+#
+# The schema is encoded in the URL fragment - works in ANY browser/tab.
+# After schema changes: re-open http://localhost:8080/view.html
+#
+# Schema files available:
+#   http://localhost:8080/view.html    - ChartDB with schema auto-loaded (RECOMMENDED)
+#   http://localhost:8080/schema.sql     - Full PostgreSQL schema (pg_dump format)
+#   http://localhost:8080/diagram.sql    - Simplified schema for ChartDB/drawDB
+local_resource(
+    "chartdb",
+    cmd = ["sh", "-c", """
+        docker rm -f chartdb 2>/dev/null || true
+        docker run -d \
+            --name chartdb \
+            --network foodflow-net \
+            -p 3501:80 \
+            ghcr.io/chartdb/chartdb:latest
+        echo 'ChartDB started (http://localhost:3501)'
+    """],
+    labels = ["Tools"],
+    auto_init = True,
+)
+
+# Nuxt dev server - runs in docker with hot reload
+# Environment variables are loaded from environments/dev/.env
+local_resource(
+    "Nuxt",
+    cmd = ["sh", "-c",
+        "(set -a && source /home/simon/repos/foodflow/environments/dev/.env && " +
+        "docker rm -f foodflow-nuxt 2>/dev/null; " +
+        "docker run -d --name foodflow-nuxt --network foodflow-net -p 3500:3000 " +
+        "-v /home/simon/repos/foodflow/src/nuxt:/app -w /app " +
+        "-e PGHOST=foodflow-dev-postgres -e PGPORT=5432 -e PGDATABASE=foodflow " +
+        "-e PGUSER=postgres -e PGPASSWORD=postgres " +
+        "-e HOST=0.0.0.0 -e PORT=3000 " +
+        "-e NUXT_OAUTH_ZITADEL_CLIENT_ID " +
+        "-e NUXT_OAUTH_ZITADEL_DOMAIN " +
+        "-e NUXT_OAUTH_ZITADEL_REDIRECT_URL " +
+        "-e APP_URL " +
+        "oven/bun:1 bun dev --port 3000 --host 0.0.0.0)"
+    ],
     labels = ["Frontend"],
     resource_deps = ["postgres"],
     auto_init = True,
