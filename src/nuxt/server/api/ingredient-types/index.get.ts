@@ -5,6 +5,6 @@ export default defineEventHandler(async () => {
     SELECT * FROM ingredient_types 
     ORDER BY category, name
   `)
-  
-  return ingredients.map((i) => mapIngredientType(i as Record<string, unknown>))
+
+  return ingredients.map(i => mapIngredientType(i as Record<string, unknown>))
 })

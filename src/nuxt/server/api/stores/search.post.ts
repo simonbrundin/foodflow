@@ -3,14 +3,14 @@ import { query, mapStoreProduct } from '~/server/utils/db'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { storeId, searchQuery } = body
-  
+
   if (!storeId || !searchQuery) {
     throw createError({
       statusCode: 400,
       message: 'storeId and searchQuery are required'
     })
   }
-  
+
   const products = await query(`
     SELECT * FROM store_products
     WHERE store_id = $1 
@@ -19,6 +19,6 @@ export default defineEventHandler(async (event) => {
     ORDER BY price_per_kg ASC
     LIMIT 50
   `, [storeId, `%${searchQuery}%`])
-  
-  return products.map((p) => mapStoreProduct(p as Record<string, unknown>))
+
+  return products.map(p => mapStoreProduct(p as Record<string, unknown>))
 })

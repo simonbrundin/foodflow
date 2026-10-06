@@ -18,6 +18,6 @@ export default defineEventHandler(async () => {
     LEFT JOIN store_products sp ON pm.store_product_id = sp.id
     ORDER BY it.name, s.name
   `)
-  
-  return mappings.map((m) => mapProductMapping(m as Record<string, unknown>))
+
+  return mappings.map(m => mapProductMapping(m as Record<string, unknown>))
 })

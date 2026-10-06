@@ -6,6 +6,6 @@ export default defineEventHandler(async () => {
     WHERE is_active = true 
     ORDER BY name
   `)
-  
-  return stores.map((s) => mapStore(s as Record<string, unknown>))
+
+  return stores.map(s => mapStore(s as Record<string, unknown>))
 })

@@ -5,18 +5,18 @@ import { parseRecipeFromUrl, matchIngredientsToTypes } from '~/server/utils/reci
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { url } = body
-  
+
   if (!url) {
     throw createError({
       statusCode: 400,
       message: 'URL is required'
     })
   }
-  
+
   try {
     // 1. Parse the recipe from URL
     const parsedRecipe = await parseRecipeFromUrl(url)
-    
+
     // 2. Get all ingredient types for matching
     const ingredientTypes = await query('SELECT * FROM ingredient_types')
     const ingredientTypesList = ingredientTypes.map((i) => {
@@ -28,13 +28,13 @@ export default defineEventHandler(async (event) => {
         category: String(row.category)
       }
     })
-    
+
     // 3. Try to match ingredients
     const matches = await matchIngredientsToTypes(
       parsedRecipe.ingredients,
       ingredientTypesList
     )
-    
+
     // 4. Build ingredients array for database
     const ingredients = parsedRecipe.ingredients.map((ing) => {
       const match = matches.get(ing.rawText)
@@ -45,11 +45,11 @@ export default defineEventHandler(async (event) => {
         notes: undefined
       }
     })
-    
+
     // 5. Save to database
     const id = randomUUID()
     const now = new Date().toISOString()
-    
+
     await execute(`
       INSERT INTO recipes (
         id, title, description, image_url, prep_time, cook_time, servings, 
@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
       parsedRecipe.tags ? JSON.stringify(parsedRecipe.tags) : null,
       now
     ])
-    
+
     return {
       success: true,
       id,

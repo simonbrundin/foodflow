@@ -20,7 +20,7 @@ interface MappedIngredient {
   brand?: string
   price: number
   totalPrice: number
-  sources: Array<{ recipeId: string; amount: number }>
+  sources: Array<{ recipeId: string, amount: number }>
 }
 
 interface UnmappedIngredient {
@@ -30,7 +30,7 @@ interface UnmappedIngredient {
   amount: number
   unit: string
   notes?: string
-  sources: Array<{ recipeId: string; amount: number }>
+  sources: Array<{ recipeId: string, amount: number }>
 }
 
 interface CartSummary {
@@ -57,17 +57,17 @@ interface RecipeRow {
 export default defineEventHandler(async (event): Promise<GeneratedCartResult> => {
   const body = await readBody(event)
   const { weekPlanId, storeId } = body
-  
+
   validateRequest(body, weekPlanId, storeId)
-  
+
   const weekPlan = await fetchWeekPlan(weekPlanId)
   const store = await fetchStore(storeId)
   const weekPlanIngredients = await fetchWeekPlanIngredients(weekPlanId)
-  
+
   const mappings = await getStoreMappings(storeId)
   const products = await getStoreProducts(storeId)
   const ingredientTypes = await getIngredientTypes()
-  
+
   return buildCartResponse(
     weekPlanIngredients,
     mappings,
@@ -92,11 +92,11 @@ async function fetchWeekPlan(weekPlanId: unknown) {
     'SELECT * FROM week_plans WHERE id = $1',
     [weekPlanId]
   )
-  
+
   if (!weekPlan) {
     throw createError({ statusCode: 404, message: 'Week plan not found' })
   }
-  
+
   return weekPlan as Record<string, unknown>
 }
 
@@ -105,11 +105,11 @@ async function fetchStore(storeId: unknown) {
     'SELECT * FROM stores WHERE id = $1',
     [storeId]
   )
-  
+
   if (!store) {
     throw createError({ statusCode: 404, message: 'Store not found' })
   }
-  
+
   return store as Record<string, unknown>
 }
 
@@ -118,36 +118,37 @@ async function fetchWeekPlanIngredients(weekPlanId: unknown) {
     'SELECT recipe_id, servings FROM week_plan_recipes WHERE week_plan_id = $1',
     [weekPlanId]
   )
-  
+
   const ingredientMap = new Map<string, {
     amount: number
     unit: string
     notes?: string
-    sources: Array<{ recipeId: string; amount: number }>
+    sources: Array<{ recipeId: string, amount: number }>
   }>()
-  
+
   for (const pr of planRecipes) {
     const recipe = await queryOne<RecipeRow>(
       'SELECT id, servings, ingredients FROM recipes WHERE id = $1',
       [pr.recipe_id]
     )
-    
+
     if (!recipe) continue
-    
+
     const ingredients = typeof recipe.ingredients === 'string'
       ? JSON.parse(recipe.ingredients)
       : recipe.ingredients
-    
+
     const scaleFactor = pr.servings / recipe.servings
-    
+
     for (const ing of ingredients as Array<{
       ingredientTypeId: string
       amount: number
-      unit: string
+      unitId?: string
+      unit?: string
       notes?: string
     }>) {
       const scaledAmount = ing.amount * scaleFactor
-      
+
       if (ingredientMap.has(ing.ingredientTypeId)) {
         const existing = ingredientMap.get(ing.ingredientTypeId)!
         existing.amount += scaledAmount
@@ -155,14 +156,14 @@ async function fetchWeekPlanIngredients(weekPlanId: unknown) {
       } else {
         ingredientMap.set(ing.ingredientTypeId, {
           amount: scaledAmount,
-          unit: ing.unit,
+          unit: ing.unitId ?? ing.unit ?? 'st',
           notes: ing.notes,
           sources: [{ recipeId: recipe.id, amount: scaledAmount }]
         })
       }
     }
   }
-  
+
   return ingredientMap
 }
 
@@ -171,25 +172,29 @@ function buildCartResponse(
     amount: number
     unit: string
     notes?: string
-    sources: Array<{ recipeId: string; amount: number }>
+    sources: Array<{ recipeId: string, amount: number }>
   }>,
-  mappings: Array<{ ingredient_type_id: string; ingredient_type_name: string; default_unit: string }>,
+  mappings: Array<{
+    ingredient_type_id: string
+    ingredient_type_name: string
+    store_product_id: string
+  }>,
   products: MappedStoreProduct[],
-  ingredientTypes: Array<{ id: string; name: string; category: string }>,
+  ingredientTypes: Array<{ id: string, name: string, category: string }>,
   weekPlan: Record<string, unknown>,
   store: Record<string, unknown>
 ): GeneratedCartResult {
   const mappedIngredients: MappedIngredient[] = []
   const unmappedIngredients: UnmappedIngredient[] = []
   let totalPrice = 0
-  
+
   for (const [ingredientTypeId, { amount, unit, notes, sources }] of ingredientMap) {
     const ingType = ingredientTypes.find(i => i.id === ingredientTypeId)
     const mapping = mappings.find(m => m.ingredient_type_id === ingredientTypeId)
-    
+
     if (mapping) {
-      const product = products.find(p => p.id === mapping.ingredient_type_id)
-      
+      const product = products.find(p => p.id === mapping.store_product_id)
+
       if (product) {
         const total = calculateIngredientPrice(
           amount,
@@ -202,10 +207,10 @@ function buildCartResponse(
             unit: product.unit,
             price: product.price,
             pricePerKg: product.pricePerKg,
-            inStock: true,
+            inStock: true
           }
         )
-        
+
         mappedIngredients.push({
           ingredientTypeId,
           ingredientTypeName: ingType?.name ?? mapping.ingredient_type_name,
@@ -220,7 +225,7 @@ function buildCartResponse(
           totalPrice: Math.round(total * 100) / 100,
           sources
         })
-        
+
         totalPrice += total
       }
     } else {
@@ -235,7 +240,7 @@ function buildCartResponse(
       })
     }
   }
-  
+
   return {
     success: true,
     mappedIngredients,

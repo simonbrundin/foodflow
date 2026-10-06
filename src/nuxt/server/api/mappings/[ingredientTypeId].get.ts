@@ -1,15 +1,15 @@
 import { query, mapProductMapping } from '~/server/utils/db'
 
 export default defineEventHandler(async (event) => {
-  const ingredientTypeId = getRouterParam(event, 'ingredientTypeId')
-  
+  const ingredientTypeId = getRouterParam(event, 'id')
+
   if (!ingredientTypeId) {
     throw createError({
       statusCode: 400,
       message: 'ingredientTypeId is required'
     })
   }
-  
+
   const mappings = await query(`
     SELECT 
       pm.*,
@@ -27,6 +27,6 @@ export default defineEventHandler(async (event) => {
     WHERE pm.ingredient_type_id = $1
     ORDER BY s.name, pm.is_default DESC, pm.priority DESC
   `, [ingredientTypeId])
-  
-  return mappings.map((m) => mapProductMapping(m as Record<string, unknown>))
+
+  return mappings.map(m => mapProductMapping(m as Record<string, unknown>))
 })

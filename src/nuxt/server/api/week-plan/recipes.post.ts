@@ -4,16 +4,15 @@ import { randomUUID } from 'crypto'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
-  // Support both old format (weekPlanId required) and new format (auto-get current week)
-  const { weekPlanId: bodyWeekPlanId, recipeId, servings = 4, dayOfWeek, mealType, notes } = body
+  const { weekPlanId: bodyWeekPlanId, recipeId, servings = 4, dayOfWeek, mealType, person, notes } = body
   let weekPlanId = bodyWeekPlanId
 
   // If no weekPlanId provided, get the current week plan
   if (!weekPlanId) {
     const currentWeek = await query(
       `SELECT id FROM week_plans
-       WHERE is_current = true OR week_number = date_part('week', CURRENT_DATE)
-       ORDER BY is_current DESC NULLS LAST
+       WHERE week_number = date_part('week', CURRENT_DATE)
+       ORDER BY year DESC
        LIMIT 1`
     )
 
@@ -37,9 +36,9 @@ export default defineEventHandler(async (event) => {
   const id = randomUUID()
 
   await execute(
-    `INSERT INTO week_plan_recipes (id, week_plan_id, recipe_id, servings, day_of_week, meal_type, notes)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [id, weekPlanId, recipeId, servings, dayOfWeek ?? null, mealType ?? null, notes ?? null]
+    `INSERT INTO week_plan_recipes (id, week_plan_id, recipe_id, servings, day_of_week, meal_type, person, notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [id, weekPlanId, recipeId, servings, dayOfWeek ?? null, mealType ?? null, person ?? null, notes ?? null]
   )
 
   return {
@@ -49,6 +48,7 @@ export default defineEventHandler(async (event) => {
     servings,
     dayOfWeek,
     mealType,
+    person,
     notes,
     message: 'Recipe added to week plan'
   }

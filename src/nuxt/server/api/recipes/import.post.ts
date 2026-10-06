@@ -4,21 +4,21 @@ import { parseRecipeFromUrl, matchIngredientsToTypes } from '~/server/utils/reci
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { url } = body
-  
+
   if (!url) {
     throw createError({
       statusCode: 400,
       message: 'URL is required'
     })
   }
-  
+
   try {
     // Parse the recipe from URL
     const parsedRecipe = await parseRecipeFromUrl(url)
-    
+
     // Get all ingredient types for matching
     const ingredientTypes = await query('SELECT * FROM ingredient_types')
-    
+
     // Try to match ingredients
     const matches = await matchIngredientsToTypes(
       parsedRecipe.ingredients,
@@ -32,31 +32,31 @@ export default defineEventHandler(async (event) => {
         }
       })
     )
-    
+
     // Count matches
     let matchedCount = 0
     let highConfidenceCount = 0
-    
+
     for (const [, match] of matches) {
       matchedCount++
       if (match.confidence > 0.7) {
         highConfidenceCount++
       }
     }
-    
+
     // Calculate overall confidence
-    const matchRate = parsedRecipe.ingredients.length > 0 
-      ? matchedCount / parsedRecipe.ingredients.length 
+    const matchRate = parsedRecipe.ingredients.length > 0
+      ? matchedCount / parsedRecipe.ingredients.length
       : 0
     parsedRecipe.confidence = parsedRecipe.confidence * matchRate
-    
+
     // Add warnings for unmatched ingredients
     for (const ing of parsedRecipe.ingredients) {
       if (!matches.has(ing.rawText)) {
         parsedRecipe.warnings.push(`Could not match: ${ing.rawText}`)
       }
     }
-    
+
     return {
       success: true,
       recipe: parsedRecipe,
