@@ -1,6 +1,5 @@
 import { query } from './db'
 import { RECIPE_PARSING_SYSTEM_PROMPT, INGREDIENT_MATCHING_PROMPT } from './prompts'
-import { getOpenAIKey } from './settings'
 
 interface OpenAIResponse {
   id: string
@@ -73,7 +72,7 @@ export async function parseRecipeWithAI(text: string, apiKey: string): Promise<P
 
   // Normalize units
   if (parsed.ingredients) {
-    parsed.ingredients = parsed.ingredients.map((ing: { amount: unknown; unit: string; name?: string }) => ({
+    parsed.ingredients = parsed.ingredients.map((ing: { amount: unknown, unit: string, name?: string }) => ({
       ...ing,
       unit: normalizeUnit(ing.unit || 'st'),
       amount: normalizeAmount(ing.amount)
@@ -85,25 +84,25 @@ export async function parseRecipeWithAI(text: string, apiKey: string): Promise<P
 
 function normalizeUnit(unit: string): string {
   const unitMap: Record<string, string> = {
-    'dl': 'ml',
-    'liter': 'l',
-    'gram': 'g',
-    'kilo': 'kg',
-    'kilogram': 'kg',
-    'milliliter': 'ml',
-    'styck': 'st',
-    'stycken': 'st',
-    'matsked': 'msk',
-    'tesked': 'tsk',
-    'kryddmått': 'krm',
-    'g': 'g',
-    'kg': 'kg',
-    'ml': 'ml',
-    'l': 'l',
-    'st': 'st',
-    'msk': 'msk',
-    'tsk': 'tsk',
-    'krm': 'krm'
+    dl: 'ml',
+    liter: 'l',
+    gram: 'g',
+    kilo: 'kg',
+    kilogram: 'kg',
+    milliliter: 'ml',
+    styck: 'st',
+    stycken: 'st',
+    matsked: 'msk',
+    tesked: 'tsk',
+    kryddmått: 'krm',
+    g: 'g',
+    kg: 'kg',
+    ml: 'ml',
+    l: 'l',
+    st: 'st',
+    msk: 'msk',
+    tsk: 'tsk',
+    krm: 'krm'
   }
   return unitMap[unit.toLowerCase()] || 'st'
 }
@@ -125,25 +124,25 @@ function normalizeAmount(amount: unknown): number {
 
 // Match parsed ingredients to database ingredient types
 export async function matchIngredientsToDatabase(
-  ingredients: { amount: number; unit: string; name: string }[],
+  ingredients: { amount: number, unit: string, name: string }[],
   apiKey: string
 ): Promise<IngredientMatch[]> {
   // Get all ingredient types
   const ingredientTypes = await query('SELECT * FROM ingredient_types')
-  
+
   const results: IngredientMatch[] = []
-  
+
   for (const ing of ingredients) {
     const nameLower = ing.name.toLowerCase()
     let match: IngredientMatch | null = null
-    
+
     // Simple exact match first
-    for (const it of ingredientTypes as Array<{ id: string; name: string; aliases?: string }>) {
+    for (const it of ingredientTypes as Array<{ id: string, name: string, aliases?: string }>) {
       if (nameLower.includes(it.name.toLowerCase()) || it.name.toLowerCase().includes(nameLower)) {
         match = { ingredientTypeId: it.id, confidence: 0.9 }
         break
       }
-      
+
       // Check aliases
       if (it.aliases) {
         try {
@@ -159,21 +158,21 @@ export async function matchIngredientsToDatabase(
         }
       }
     }
-    
+
     // If no match found, try AI
     if (!match) {
-      match = await findBestIngredientMatch(ing.name, ingredientTypes as Array<{ id: string; name: string }>, apiKey)
+      match = await findBestIngredientMatch(ing.name, ingredientTypes as Array<{ id: string, name: string }>, apiKey)
     }
-    
+
     results.push(match ?? { ingredientTypeId: ing.name, confidence: 0 })
   }
-  
+
   return results
 }
 
 async function findBestIngredientMatch(
   ingredientName: string,
-  ingredientTypes: Array<{ id: string; name: string }>,
+  ingredientTypes: Array<{ id: string, name: string }>,
   apiKey: string
 ): Promise<IngredientMatch | null> {
   const typeList = ingredientTypes.map(it => it.name).join(', ')
@@ -200,14 +199,14 @@ async function findBestIngredientMatch(
 
     const data: OpenAIResponse = await response.json()
     const content = data.choices[0]?.message?.content
-    
+
     if (!content) return null
 
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (!jsonMatch) return null
 
     const parsed = JSON.parse(jsonMatch[0])
-    
+
     if (parsed.id && parsed.confidence > 0.5) {
       return {
         ingredientTypeId: parsed.id,
@@ -217,6 +216,6 @@ async function findBestIngredientMatch(
   } catch {
     // AI failed, return null
   }
-  
+
   return null
 }

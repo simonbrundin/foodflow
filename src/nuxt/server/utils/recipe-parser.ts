@@ -44,25 +44,25 @@ function parseDuration(iso: string): number {
 // ============================================
 
 const UNIT_MAP: Record<string, string> = {
-  'kilo': 'kg',
-  'kilogram': 'kg',
-  'gram': 'g',
-  'milliliter': 'ml',
-  'liter': 'l',
-  'styck': 'st',
-  'stycken': 'st',
-  'matsked': 'msk',
-  'matskedar': 'msk',
-  'tesked': 'tsk',
-  'teskedar': 'tsk',
-  'kryddmått': 'krm'
+  kilo: 'kg',
+  kilogram: 'kg',
+  gram: 'g',
+  milliliter: 'ml',
+  liter: 'l',
+  styck: 'st',
+  stycken: 'st',
+  matsked: 'msk',
+  matskedar: 'msk',
+  tesked: 'tsk',
+  teskedar: 'tsk',
+  kryddmått: 'krm'
 }
 
 const UNIT_PATTERN = /\b(\d+)\s*(kg|g|ml|l|st|msk|tsk|krm|kilo|gram|milliliter|liter|styck|stycken|matsked|matskedar|tesked|teskedar|kryddmått)\b/i
 
 function parseIngredientText(text: string): ParsedIngredient {
   const result: ParsedIngredient = { rawText: text }
-  
+
   // Match amount (including fractions)
   const amountMatch = text.match(/^([\d.,]+(?:\s*\/\s*[\d.,]+)?)\s*/)
   if (amountMatch && amountMatch[1]) {
@@ -71,14 +71,14 @@ function parseIngredientText(text: string): ParsedIngredient {
   } else {
     result.name = text.trim()
   }
-  
+
   // Extract unit
   const unitMatch = result.name?.match(UNIT_PATTERN)
   if (unitMatch && unitMatch[2]) {
     result.unit = UNIT_MAP[unitMatch[2].toLowerCase()] || unitMatch[2].toLowerCase()
     result.name = result.name?.replace(unitMatch[0], '').trim()
   }
-  
+
   return result
 }
 
@@ -100,7 +100,7 @@ function extractJsonLd(html: string): unknown[] {
   const results: unknown[] = []
   const scriptRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
   let match
-  
+
   while ((match = scriptRegex.exec(html)) !== null) {
     try {
       const jsonContent = match[1]
@@ -116,7 +116,7 @@ function extractJsonLd(html: string): unknown[] {
       // Invalid JSON, skip
     }
   }
-  
+
   return results
 }
 
@@ -159,16 +159,16 @@ function parseJsonLdRecipe(jsonLd: unknown, sourceUrl: string, sourceName: strin
     confidence: 0.9,
     warnings: []
   }
-  
+
   // Parse instructions
   if (data.recipeInstructions) {
     recipe.instructions = parseInstructions(data.recipeInstructions)
   }
-  
+
   // Extract tags/categories
   const categories = (data.recipeCategory || data.recipeCuisine) as string[] | string || []
   recipe.tags = Array.isArray(categories) ? categories : [categories]
-  
+
   return recipe
 }
 
@@ -188,7 +188,7 @@ function extractImageUrl(image: unknown): string | undefined {
 
 function parseInstructions(instructions: unknown): string[] {
   const result: string[] = []
-  
+
   if (Array.isArray(instructions)) {
     for (const step of instructions) {
       if (typeof step === 'string') {
@@ -216,7 +216,7 @@ function parseInstructions(instructions: unknown): string[] {
   } else if (typeof instructions === 'string') {
     result.push(instructions)
   }
-  
+
   return result
 }
 
@@ -241,15 +241,15 @@ const KNOWN_SOURCES: Record<string, string> = {
   'allas': 'Allas'
 }
 
-function detectSource(url: string): { name: string; confidence: number } {
+function detectSource(url: string): { name: string, confidence: number } {
   const host = new URL(url).hostname.toLowerCase()
-  
+
   for (const [key, sourceName] of Object.entries(KNOWN_SOURCES)) {
     if (host.includes(key)) {
       return { name: sourceName, confidence: 0.9 }
     }
   }
-  
+
   return { name: host, confidence: 0.5 }
 }
 
@@ -264,36 +264,36 @@ export async function parseRecipeFromUrl(url: string): Promise<ParsedRecipe> {
       'Accept': 'text/html,application/xhtml+xml'
     }
   })
-  
+
   if (!response.ok) {
     throw new Error(`Failed to fetch recipe: ${response.status}`)
   }
-  
+
   const html = await response.text()
   const { name: sourceName } = detectSource(url)
-  
+
   // Extract JSON-LD data
   const jsonLd = extractJsonLd(html)
   const recipeJson = findRecipeInJsonLd(jsonLd)
-  
+
   if (recipeJson) {
     return parseJsonLdRecipe(recipeJson, url, sourceName)
   }
-  
+
   // Fallback: try to extract from meta tags or common patterns
   return parseFallbackRecipe(html, url, sourceName)
 }
 
 function parseFallbackRecipe(html: string, url: string, sourceName: string): ParsedRecipe {
   // Try to extract title
-  const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i) || 
-                     html.match(/<title>([^<]+)<\/title>/i)
+  const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
+    || html.match(/<title>([^<]+)<\/title>/i)
   const title = titleMatch && titleMatch[1] ? titleMatch[1].trim() : 'Untitled Recipe'
-  
+
   // Try to extract image
   const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
   const imageUrl = ogImageMatch ? ogImageMatch[1] : undefined
-  
+
   return {
     title,
     imageUrl,
@@ -320,29 +320,24 @@ export interface IngredientTypeMatch {
 export async function matchIngredientsToTypes(
   ingredients: ParsedIngredient[],
   ingredientTypes: IngredientTypeMatch[]
-): Promise<Map<string, { ingredientTypeId: string; confidence: number }>> {
-  const matches = new Map<string, { ingredientTypeId: string; confidence: number }>()
-  
+): Promise<Map<string, { ingredientTypeId: string, confidence: number }>> {
+  const matches = new Map<string, { ingredientTypeId: string, confidence: number }>()
+
   for (const ing of ingredients) {
     if (!ing.name) continue
-    
+
     const nameLower = ing.name.toLowerCase()
-    let bestMatch: { id: string; confidence: number } | null = null
-    
+    let bestMatch: { id: string, confidence: number } | null = null
+
     for (const it of ingredientTypes) {
       const itNameLower = it.name.toLowerCase()
       let confidence = 0
-      
-      // Exact match
+
       if (nameLower === itNameLower) {
         confidence = 1.0
-      }
-      // Contains match
-      else if (nameLower.includes(itNameLower) || itNameLower.includes(nameLower)) {
+      } else if (nameLower.includes(itNameLower) || itNameLower.includes(nameLower)) {
         confidence = 0.8
-      }
-      // Alias match
-      else if (it.aliases) {
+      } else if (it.aliases) {
         for (const alias of it.aliases) {
           const aliasLower = alias.toLowerCase()
           if (nameLower === aliasLower) {
@@ -354,16 +349,16 @@ export async function matchIngredientsToTypes(
           }
         }
       }
-      
+
       if (confidence > (bestMatch?.confidence || 0)) {
         bestMatch = { id: it.id, confidence }
       }
     }
-    
+
     if (bestMatch && bestMatch.confidence > 0.5) {
       matches.set(ing.rawText, { ingredientTypeId: bestMatch.id, confidence: bestMatch.confidence })
     }
   }
-  
+
   return matches
 }

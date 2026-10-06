@@ -1,4 +1,4 @@
-import { queryOne } from '~/server/utils/db'
+import { queryOne, execute } from '~/server/utils/db'
 
 interface Setting {
   key: string
@@ -17,7 +17,7 @@ export async function getOpenAIKey(): Promise<string | null> {
   // First check env variable (for development)
   const envKey = process.env.OPENAI_API_KEY
   if (envKey) return envKey
-  
+
   // Then check database
   return getSetting('openai_api_key')
 }
@@ -33,5 +33,3 @@ export async function setSetting(key: string, value: string, description?: strin
     [key, value, description || null]
   )
 }
-
-import { execute } from './db'

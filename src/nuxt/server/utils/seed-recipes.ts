@@ -1,7 +1,7 @@
-import { execute, queryOne } from './db'
+import { execute, query, queryOne } from './db'
+import { randomUUID } from 'crypto'
 
 interface SeedRecipe {
-  id: string
   title: string
   description: string
   imageUrl: string
@@ -9,14 +9,13 @@ interface SeedRecipe {
   cookTime: number
   servings: number
   difficulty: string
-  ingredients: Array<{ ingredientTypeId: string; amount: number; unit: string; notes?: string }>
+  ingredients: Array<{ ingredientName: string, amount: number, unit: string, notes?: string }>
   instructions: string[]
   tags: string[]
 }
 
 const RECIPES: SeedRecipe[] = [
   {
-    id: 'rec_pasta_carbonara',
     title: 'Klassisk Pasta Carbonara',
     description: 'En krämig italiensk pastarätt med bacon, ägg och parmesan.',
     imageUrl: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=800',
@@ -25,12 +24,12 @@ const RECIPES: SeedRecipe[] = [
     servings: 4,
     difficulty: 'medium',
     ingredients: [
-      { ingredientTypeId: 'ing_pasta', amount: 400, unit: 'g', notes: 'spaghetti' },
-      { ingredientTypeId: 'ing_bacon', amount: 200, unit: 'g' },
-      { ingredientTypeId: 'ing_agg', amount: 4, unit: 'st' },
-      { ingredientTypeId: 'ing_parmesan', amount: 100, unit: 'g', notes: 'riven' },
-      { ingredientTypeId: 'ing_salt', amount: 1, unit: 'krm' },
-      { ingredientTypeId: 'ing_peppar', amount: 1, unit: 'krm', notes: 'nymalen' }
+      { ingredientName: 'Pasta', amount: 400, unit: 'g', notes: 'spaghetti' },
+      { ingredientName: 'Bacon', amount: 200, unit: 'g' },
+      { ingredientName: 'Ägg', amount: 4, unit: 'st' },
+      { ingredientName: 'Parmesan', amount: 100, unit: 'g', notes: 'riven' },
+      { ingredientName: 'Salt', amount: 1, unit: 'krm' },
+      { ingredientName: 'Svartpeppar', amount: 1, unit: 'krm', notes: 'nymalen' }
     ],
     instructions: [
       'Koka pastan enligt paketets anvisningar i saltat vatten.',
@@ -43,7 +42,6 @@ const RECIPES: SeedRecipe[] = [
     tags: ['italiensk', 'pasta', 'snabb', 'klassiker']
   },
   {
-    id: 'rec_pumpa_curry',
     title: 'Thailändsk Pumpacurry',
     description: 'En värmande vegetarisk curry med pumpa och kikärtor.',
     imageUrl: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=800',
@@ -52,71 +50,70 @@ const RECIPES: SeedRecipe[] = [
     servings: 4,
     difficulty: 'easy',
     ingredients: [
-      { ingredientTypeId: 'ing_gresskar', amount: 500, unit: 'g', notes: 'tärnad' },
-      { ingredientTypeId: 'ing_kikartor', amount: 400, unit: 'g' },
-      { ingredientTypeId: 'ing_tahini', amount: 2, unit: 'msk' },
-      { ingredientTypeId: 'ing_citron', amount: 1, unit: 'st' },
-      { ingredientTypeId: 'ing_spiskummin', amount: 2, unit: 'krm' },
-      { ingredientTypeId: 'ing_lok', amount: 1, unit: 'st' },
-      { ingredientTypeId: 'ing_ris', amount: 300, unit: 'g' }
+      { ingredientName: 'Pumpa/Gresskar', amount: 500, unit: 'g', notes: 'tärnad' },
+      { ingredientName: 'Kikärtor', amount: 400, unit: 'g' },
+      { ingredientName: 'Tahini', amount: 2, unit: 'msk' },
+      { ingredientName: 'Citron', amount: 1, unit: 'st' },
+      { ingredientName: 'Spiskummin', amount: 2, unit: 'krm' },
+      { ingredientName: 'Lök', amount: 1, unit: 'st' },
+      { ingredientName: 'Vitlök', amount: 3, unit: 'klyfta' },
+      { ingredientName: 'Olivolja', amount: 2, unit: 'msk' },
+      { ingredientName: 'Salt', amount: 1, unit: 'krm' }
     ],
     instructions: [
-      'Koka riset enligt paketets anvisningar.',
-      'Fräs lök i olja tills den är mjuk.',
-      'Tillsätt pumpa och kryddor.',
-      'Låt koka i 15-20 minuter tills pumpan är mjuk.',
-      'Rör ner kikärtor och tahini.',
-      'Smaka av med citronjuice och salt.',
-      'Servera med ris.'
+      'Hacka lök och vitlök. Fräs i olivolja i en stor kastrull.',
+      'Tillsätt spiskummin och låt fräsa en minut.',
+      'Lägg i pumpa och kikärtor. Häll på vatten så det täcker.',
+      'Låt koka i 20 minuter tills pumpan är mjuk.',
+      'Rör ner tahini och smaka av med citron och salt.',
+      'Servera med ris eller naanbröd.'
     ],
-    tags: ['vegetarisk', 'thailändsk', 'curry', 'nyttig']
+    tags: ['vegetarisk', 'thailändsk', 'curry', 'snabb']
   },
   {
-    id: 'rec_kyckling_wok',
-    title: 'Asiatisk Kycklingwok',
-    description: 'En snabb och smakrik wok med kyckling och grönsaker.',
-    imageUrl: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800',
+    title: 'Kycklingwok med Grönsaker',
+    description: 'En snabb och hälsosam wok med kyckling och färska grönsaker.',
+    imageUrl: 'https://images.unsplash.com/photo-1518983546435-91f8b87fe561?w=800',
     prepTime: 15,
     cookTime: 15,
     servings: 4,
     difficulty: 'easy',
     ingredients: [
-      { ingredientTypeId: 'ing_kyckling', amount: 500, unit: 'g' },
-      { ingredientTypeId: 'ing_ris', amount: 300, unit: 'g' },
-      { ingredientTypeId: 'ing_majs', amount: 150, unit: 'g' },
-      { ingredientTypeId: 'ing_bonor', amount: 200, unit: 'g' },
-      { ingredientTypeId: 'ing_soja', amount: 3, unit: 'msk' },
-      { ingredientTypeId: 'ing_inlagd_ingefra', amount: 50, unit: 'g' },
-      { ingredientTypeId: 'ing_vitlok', amount: 2, unit: 'st' },
-      { ingredientTypeId: 'ing_olivolja', amount: 2, unit: 'msk' }
+      { ingredientName: 'Kyckling', amount: 500, unit: 'g', notes: 'strimlad' },
+      { ingredientName: 'Ris', amount: 400, unit: 'g' },
+      { ingredientName: 'Lök', amount: 1, unit: 'st' },
+      { ingredientName: 'Vitlök', amount: 2, unit: 'klyfta' },
+      { ingredientName: 'Sojasås', amount: 3, unit: 'msk' },
+      { ingredientName: 'Inlagd ingefära', amount: 1, unit: 'msk' },
+      { ingredientName: 'Olivolja', amount: 2, unit: 'msk' }
     ],
     instructions: [
-      'Koka riset enligt paketets anvisningar.',
-      'Hetta upp en wokpanna med olja.',
-      'Woka kycklingen i ca 5 minuter.',
-      'Tillsätt vitlök och ingefära.',
-      'Lägg i majs och bönor.',
-      'Tillsätt sojasås och servera.'
+      'Koka riset enligt förpackningen.',
+      'Skär kycklingen i strimlor.',
+      'Hetta upp olja i en wokpanna.',
+      'Woka kycklingen tills den är gyllenbrun.',
+      'Tillsätt lök, vitlök och ingefära.',
+      'Häll på sojasås och woka i 2 minuter till.',
+      'Servera med riset.'
     ],
-    tags: ['asiatiskt', 'snabb', 'kyckling', 'wok']
+    tags: ['snabb', 'kyckling', 'wok', 'asiatisk']
   },
   {
-    id: 'rec_guacamole',
-    title: 'Färsk Guacamole',
-    description: 'Klassisk mexikansk guacamole med avocado och koriander.',
-    imageUrl: 'https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=800',
+    title: 'Guacamole',
+    description: 'Klassisk mexikansk guacamole - perfekt som dipp eller tillbehör.',
+    imageUrl: 'https://images.unsplash.com/photo-1604152135912-04a022e23696?w=800',
     prepTime: 10,
     cookTime: 0,
     servings: 4,
     difficulty: 'easy',
     ingredients: [
-      { ingredientTypeId: 'ing_avokado', amount: 3, unit: 'st' },
-      { ingredientTypeId: 'ing_lime', amount: 2, unit: 'st' },
-      { ingredientTypeId: 'ing_koriander', amount: 30, unit: 'g' },
-      { ingredientTypeId: 'ing_lok', amount: 0.5, unit: 'st' },
-      { ingredientTypeId: 'ing_tomat', amount: 1, unit: 'st' },
-      { ingredientTypeId: 'ing_salt', amount: 1, unit: 'krm' },
-      { ingredientTypeId: 'ing_peppar', amount: 0.5, unit: 'krm' }
+      { ingredientName: 'Avokado', amount: 3, unit: 'st' },
+      { ingredientName: 'Lime', amount: 2, unit: 'st' },
+      { ingredientName: 'Koriander', amount: 30, unit: 'g' },
+      { ingredientName: 'Lök', amount: 0.5, unit: 'st' },
+      { ingredientName: 'Tomat', amount: 1, unit: 'st' },
+      { ingredientName: 'Salt', amount: 1, unit: 'krm' },
+      { ingredientName: 'Svartpeppar', amount: 0.5, unit: 'krm' }
     ],
     instructions: [
       'Dela avokadorna och ta bort kärnorna.',
@@ -133,20 +130,41 @@ const RECIPES: SeedRecipe[] = [
 export async function seedRecipes(): Promise<void> {
   const count = await queryOne<{ count: string }>('SELECT COUNT(*) as count FROM recipes')
   if (count && parseInt(count.count) > 0) {
-    console.log('Recipes already seeded')
-    return
+    return // Already seeded
   }
-  
-  console.log('Seeding recipes...')
-  
+
+  // Build ingredient name -> UUID map
+  const ingredients = await query<{ id: string, name: string }>('SELECT id, name FROM ingredient_types')
+  const ingredientMap = new Map(ingredients.map(i => [i.name, i.id]))
+
   const now = new Date().toISOString()
-  
+
   for (const recipe of RECIPES) {
+    const id = randomUUID()
+
+    // Resolve ingredient names to UUIDs
+    const ingredientsJson = recipe.ingredients
+      .map((ing) => {
+        const uuid = ingredientMap.get(ing.ingredientName)
+        if (!uuid) {
+          console.warn(`Ingredient "${ing.ingredientName}" not found, skipping in recipe ${recipe.title}`)
+          return null
+        }
+        return {
+          ingredientTypeId: uuid,
+          ingredientTypeName: ing.ingredientName,
+          amount: ing.amount,
+          unit: ing.unit,
+          notes: ing.notes
+        }
+      })
+      .filter(Boolean)
+
     await execute(
       `INSERT INTO recipes (id, title, description, image_url, prep_time, cook_time, servings, difficulty, ingredients, instructions, tags, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12)`,
       [
-        recipe.id,
+        id,
         recipe.title,
         recipe.description,
         recipe.imageUrl,
@@ -154,13 +172,11 @@ export async function seedRecipes(): Promise<void> {
         recipe.cookTime,
         recipe.servings,
         recipe.difficulty,
-        JSON.stringify(recipe.ingredients),
+        JSON.stringify(ingredientsJson),
         JSON.stringify(recipe.instructions),
         JSON.stringify(recipe.tags),
         now
       ]
     )
   }
-  
-  console.log(`Seeded ${RECIPES.length} recipes`)
 }
