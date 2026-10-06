@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: foodflow-db-pvc
+  namespace: foodflow
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foodflow-db
+  namespace: foodflow
+  labels:
+    app: foodflow-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: foodflow-db
+  template:
+    metadata:
+      labels:
+        app: foodflow-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+            - name: POSTGRES_DB
+              value: "foodflow"
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: foodflow-db-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foodflow-db
+  namespace: foodflow
+spec:
+  selector:
+    app: foodflow-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP

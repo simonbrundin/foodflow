@@ -1,0 +1,15 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Foodflow PostgreSQL",
+      "Group": "Servers",
+      "Host": "foodflow-dev-postgres",
+      "Port": 5432,
+      "Database": "foodflow",
+      "Username": "postgres",
+      "Password": "postgres",
+      "SSLCertMode": "prefer",
+      "comment": "Foodflow development database"
+    }
+  }
+}

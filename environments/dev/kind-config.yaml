@@ -1,0 +1,7 @@
+# Kind cluster for Foodflow development
+# Usage: ctlptl apply -f kind-config.yaml
+apiVersion: ctlptl.dev/v1alpha1
+kind: Cluster
+product: kind
+name: kind-foodflow
+registry: foodflow-registry

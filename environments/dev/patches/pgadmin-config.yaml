@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foodflow-pgadmin-servers
+data:
+  servers.json: |
+    {
+      "Servers": {
+        "1": {
+          "Name": "Foodflow PostgreSQL",
+          "Group": "Servers",
+          "Host": "foodflow-db.foodflow.svc.cluster.local",
+          "Port": 5432,
+          "Database": "foodflow",
+          "Username": "postgres",
+          "Password": "postgres",
+          "SSLCertMode": "prefer",
+          "comment": "Foodflow development database"
+        }
+      }
+    }

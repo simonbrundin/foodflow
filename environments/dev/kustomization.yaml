@@ -1,10 +1,23 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+namespace: foodflow
+
 resources:
-  - ../common
-  - ../common/db
-  - db
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - api-deployment.yaml
+  - api-service.yaml
+  - chartdb-deployment.yaml
+  - chartdb-service.yaml
+  - patches/pgadmin-config.yaml
+  - patches/pgadmin-service.yaml
+  - patches/postgres-kind.yaml
 
 patches:
-  - path: deployment-patch.yaml
+  - path: patches/image.yaml
+  - path: patches/app-deployment.yaml
+  - path: patches/app-service.yaml
+  - path: patches/api-deployment.yaml
+  - path: patches/api-service.yaml

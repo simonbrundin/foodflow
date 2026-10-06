@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foodflow-app
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: foodflow-app
+          env:
+            - name: NODE_ENV
+              value: "development"
+            - name: NUXT_PUBLIC_APP_URL
+              value: "http://localhost:3500"
+            - name: NUXT_PUBLIC_API_URL
+              value: "http://localhost:3500/api"
+            - name: NUXT_OAUTH_ZITADEL_CLIENT_ID
+              value: "dev-client-id"
+            - name: NUXT_OAUTH_ZITADEL_DOMAIN
+              value: "dev.zitadel.local"
+            - name: NUXT_OAUTH_ZITADEL_REDIRECT_URL
+              value: "http://localhost:3500/auth/callback"
