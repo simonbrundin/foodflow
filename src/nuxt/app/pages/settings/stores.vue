@@ -37,7 +37,7 @@ function selectStore(store: Store) {
 
 async function searchProducts() {
   if (!selectedStore.value || !searchQuery.value) return
-  
+
   isSearching.value = true
   try {
     const response = await $fetch<StoreProduct[]>('/api/stores/search', {
@@ -64,7 +64,9 @@ function formatPrice(price: number): string {
 <template>
   <div class="space-y-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Butiker</h1>
+      <h1 class="text-2xl font-bold text-gray-900">
+        Butiker
+      </h1>
       <p class="mt-1 text-sm text-gray-500">
         Hantera dina matbutiker och sök produkter
       </p>
@@ -87,8 +89,12 @@ function formatPrice(price: number): string {
             {{ chainLogos[store.chainId] || store.name.charAt(0) }}
           </div>
           <div class="flex-1">
-            <h3 class="font-semibold text-gray-900">{{ store.name }}</h3>
-            <p class="text-sm text-gray-500 capitalize">{{ store.chainId }}</p>
+            <h3 class="font-semibold text-gray-900">
+              {{ store.name }}
+            </h3>
+            <p class="text-sm text-gray-500 capitalize">
+              {{ store.chainId }}
+            </p>
           </div>
           <UIcon
             v-if="selectedStore?.id === store.id"
@@ -100,7 +106,10 @@ function formatPrice(price: number): string {
     </div>
 
     <!-- Store Details & Product Search -->
-    <div v-if="selectedStore" class="grid gap-6 lg:grid-cols-2">
+    <div
+      v-if="selectedStore"
+      class="grid gap-6 lg:grid-cols-2"
+    >
       <!-- Search -->
       <UCard>
         <template #header>
@@ -112,8 +121,12 @@ function formatPrice(price: number): string {
               {{ chainLogos[selectedStore.chainId] || selectedStore.name.charAt(0) }}
             </div>
             <div>
-              <h2 class="font-semibold text-gray-900">Sök produkter</h2>
-              <p class="text-sm text-gray-500">i {{ selectedStore.name }}</p>
+              <h2 class="font-semibold text-gray-900">
+                Sök produkter
+              </h2>
+              <p class="text-sm text-gray-500">
+                i {{ selectedStore.name }}
+              </p>
             </div>
           </div>
         </template>
@@ -158,8 +171,14 @@ function formatPrice(price: number): string {
           </h2>
         </template>
 
-        <div v-if="products.length === 0" class="py-8 text-center">
-          <UIcon name="i-lucide-search" class="mx-auto h-12 w-12 text-gray-300" />
+        <div
+          v-if="products.length === 0"
+          class="py-8 text-center"
+        >
+          <UIcon
+            name="i-lucide-search"
+            class="mx-auto h-12 w-12 text-gray-300"
+          />
           <p class="mt-2 text-gray-500">
             Sök efter produkter för att se resultat
           </p>
@@ -168,28 +187,48 @@ function formatPrice(price: number): string {
           </p>
         </div>
 
-        <div v-else class="space-y-2">
+        <div
+          v-else
+          class="space-y-2"
+        >
           <div
             v-for="product in products"
             :key="product.id"
             class="flex items-center gap-3 rounded-lg border p-3"
           >
             <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
-              <UIcon v-if="!product.imageUrl" name="i-lucide-package" class="h-6 w-6 text-gray-400" />
-              <img v-else :src="product.imageUrl" class="h-12 w-12 rounded-lg object-cover" />
+              <UIcon
+                v-if="!product.imageUrl"
+                name="i-lucide-package"
+                class="h-6 w-6 text-gray-400"
+              />
+              <img
+                v-else
+                :src="product.imageUrl"
+                class="h-12 w-12 rounded-lg object-cover"
+              >
             </div>
 
             <div class="min-w-0 flex-1">
-              <p class="truncate font-medium text-gray-900">{{ product.name }}</p>
+              <p class="truncate font-medium text-gray-900">
+                {{ product.name }}
+              </p>
               <p class="text-sm text-gray-500">
                 {{ product.brand || 'Ingen märke' }}
-                <span v-if="product.category" class="text-gray-400">• {{ product.category }}</span>
+                <span
+                  v-if="product.category"
+                  class="text-gray-400"
+                >• {{ product.category }}</span>
               </p>
             </div>
 
             <div class="text-right">
-              <p class="font-medium text-gray-900">{{ formatPrice(product.price) }}</p>
-              <p class="text-xs text-gray-500">{{ product.unit }}</p>
+              <p class="font-medium text-gray-900">
+                {{ formatPrice(product.price) }}
+              </p>
+              <p class="text-xs text-gray-500">
+                {{ product.unit }}
+              </p>
               <p class="text-sm font-medium text-emerald-600">
                 {{ formatPrice(product.pricePerKg) }}/kg
               </p>
@@ -202,8 +241,13 @@ function formatPrice(price: number): string {
     <!-- Empty state for stores -->
     <UCard v-if="!stores || stores.length === 0">
       <div class="py-8 text-center">
-        <UIcon name="i-lucide-store" class="mx-auto h-16 w-16 text-gray-300" />
-        <h3 class="mt-4 text-lg font-medium text-gray-900">Inga butiker</h3>
+        <UIcon
+          name="i-lucide-store"
+          class="mx-auto h-16 w-16 text-gray-300"
+        />
+        <h3 class="mt-4 text-lg font-medium text-gray-900">
+          Inga butiker
+        </h3>
         <p class="mt-2 text-sm text-gray-500">
           Lägg till butiker för att kunna söka produkter
         </p>
@@ -213,11 +257,16 @@ function formatPrice(price: number): string {
     <!-- Info -->
     <UCard class="border-gray-200">
       <div class="flex gap-4">
-        <UIcon name="i-lucide-info" class="h-6 w-6 flex-shrink-0 text-gray-400" />
+        <UIcon
+          name="i-lucide-info"
+          class="h-6 w-6 flex-shrink-0 text-gray-400"
+        />
         <div>
-          <h4 class="font-medium text-gray-900">Om butikssökning</h4>
+          <h4 class="font-medium text-gray-900">
+            Om butikssökning
+          </h4>
           <p class="mt-1 text-sm text-gray-600">
-            Produkterna är förifyllda med exempeldata. För att få aktuella priser 
+            Produkterna är förifyllda med exempeldata. För att få aktuella priser
             behöver du koppla upp mot butikernas API:er eller scrapa deras hemsidor.
             Priser och tillgänglighet kan variera.
           </p>

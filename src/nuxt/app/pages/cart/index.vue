@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import type { ShoppingCart } from '~/types'
+import { getErrorMessage } from '~/utils/errors'
 
 const { data: cart, pending, refresh } = await useFetch<ShoppingCart>('/api/cart')
 
+const error = ref<string | null>(null)
+
 const groupedItems = computed(() => {
   if (!cart.value?.items) return {}
-  
+
   // Group by ingredient category
   return cart.value.items.reduce((acc, item) => {
     const key = item.ingredientTypeName?.charAt(0).toUpperCase() || 'Ö'
@@ -15,15 +18,37 @@ const groupedItems = computed(() => {
   }, {} as Record<string, typeof cart.value.items>)
 })
 
-function updateQuantity(itemId: string, delta: number) {
-  // Would call PUT /api/cart/items/:id
-  console.log('Update quantity:', itemId, delta)
+async function updateQuantity(itemId: string, delta: number) {
+  error.value = null
+  try {
+    const currentItem = cart.value?.items?.find(i => i.id === itemId)
+    if (!currentItem) return
+
+    const newQuantity = (currentItem.quantity ?? 0) + delta
+
+    if (newQuantity <= 0) {
+      await removeItem(itemId)
+      return
+    }
+
+    await $fetch(`/api/cart/items/${itemId}`, {
+      method: 'PUT',
+      body: { quantity: newQuantity }
+    })
+    await refresh()
+  } catch (caughtError: unknown) {
+    error.value = getErrorMessage(caughtError, 'Kunde inte uppdatera kvantitet')
+  }
 }
 
-function removeItem(itemId: string) {
-  // Would call DELETE /api/cart/items/:id
-  console.log('Remove item:', itemId)
-  refresh()
+async function removeItem(itemId: string) {
+  error.value = null
+  try {
+    await $fetch(`/api/cart/items/${itemId}`, { method: 'DELETE' })
+    await refresh()
+  } catch (caughtError: unknown) {
+    error.value = getErrorMessage(caughtError, 'Kunde inte ta bort vara')
+  }
 }
 </script>
 
@@ -32,39 +57,71 @@ function removeItem(itemId: string) {
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">Din inköpslista</p>
-        <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-gray-950">Varukorg</h1>
-        <p v-if="cart?.storeName" class="text-sm text-gray-500">
+        <p class="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">
+          Din inköpslista
+        </p>
+        <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-gray-950">
+          Varukorg
+        </h1>
+        <p
+          v-if="cart?.storeName"
+          class="text-sm text-gray-500"
+        >
           Från {{ cart.storeName }}
         </p>
       </div>
-      <UButton variant="outline" size="sm">
-        <UIcon name="i-lucide-edit" class="mr-2 h-4 w-4" />
+      <UButton
+        variant="outline"
+        size="sm"
+      >
+        <UIcon
+          name="i-lucide-edit"
+          class="mr-2 h-4 w-4"
+        />
         Redigera
       </UButton>
     </div>
 
     <!-- Loading -->
-    <div v-if="pending" class="space-y-4">
-      <USkeleton v-for="i in 5" :key="i" class="h-20 rounded-lg" />
+    <div
+      v-if="pending"
+      class="space-y-4"
+    >
+      <USkeleton
+        v-for="i in 5"
+        :key="i"
+        class="h-20 rounded-lg"
+      />
     </div>
 
     <!-- Empty State -->
     <UCard v-else-if="!cart || cart.items?.length === 0">
       <div class="py-12 text-center">
-        <UIcon name="i-lucide-shopping-cart" class="mx-auto h-16 w-16 text-gray-300" />
-        <h3 class="mt-4 text-lg font-medium text-gray-900">Din varukorg är tom</h3>
+        <UIcon
+          name="i-lucide-shopping-cart"
+          class="mx-auto h-16 w-16 text-gray-300"
+        />
+        <h3 class="mt-4 text-lg font-medium text-gray-900">
+          Din varukorg är tom
+        </h3>
         <p class="mt-2 text-sm text-gray-500">
           Välj recept för veckan och skapa en inköpslista
         </p>
-        <UButton to="/week-plan" color="primary" class="mt-4">
+        <UButton
+          to="/week-plan"
+          color="primary"
+          class="mt-4"
+        >
           Gå till veckoplanering
         </UButton>
       </div>
     </UCard>
 
     <!-- Cart Content -->
-    <div v-else class="grid gap-6 lg:grid-cols-3">
+    <div
+      v-else
+      class="grid gap-6 lg:grid-cols-3"
+    >
       <!-- Items List -->
       <div class="lg:col-span-2 space-y-4">
         <UCard
@@ -73,7 +130,9 @@ function removeItem(itemId: string) {
           class="surface-card border-0"
         >
           <template #header>
-            <h2 class="text-lg font-semibold">{{ letter }}</h2>
+            <h2 class="text-lg font-semibold">
+              {{ letter }}
+            </h2>
           </template>
 
           <div class="divide-y divide-gray-100">
@@ -84,7 +143,10 @@ function removeItem(itemId: string) {
             >
               <!-- Product Image Placeholder -->
               <div class="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100">
-                <UIcon name="i-lucide-package" class="h-8 w-8 text-gray-400" />
+                <UIcon
+                  name="i-lucide-package"
+                  class="h-8 w-8 text-gray-400"
+                />
               </div>
 
               <!-- Product Info -->
@@ -92,7 +154,10 @@ function removeItem(itemId: string) {
                 <p class="truncate text-sm font-medium text-gray-900">
                   {{ item.storeProductName }}
                 </p>
-                <p v-if="item.brand" class="text-xs text-gray-500">
+                <p
+                  v-if="item.brand"
+                  class="text-xs text-gray-500"
+                >
                   {{ item.brand }}
                 </p>
                 <p class="text-sm text-gray-500">
@@ -124,7 +189,9 @@ function removeItem(itemId: string) {
 
               <!-- Price -->
               <div class="w-20 text-right">
-                <p class="font-medium text-gray-900">{{ item.totalPrice.toFixed(2) }} kr</p>
+                <p class="font-medium text-gray-900">
+                  {{ item.totalPrice.toFixed(2) }} kr
+                </p>
               </div>
 
               <!-- Remove -->
@@ -134,7 +201,10 @@ function removeItem(itemId: string) {
                 color="error"
                 @click="removeItem(item.id)"
               >
-                <UIcon name="i-lucide-trash-2" class="h-4 w-4" />
+                <UIcon
+                  name="i-lucide-trash-2"
+                  class="h-4 w-4"
+                />
               </UButton>
             </div>
           </div>
@@ -145,7 +215,9 @@ function removeItem(itemId: string) {
       <div class="lg:col-span-1">
         <UCard class="surface-card sticky top-4 border-0">
           <template #header>
-            <h2 class="text-lg font-semibold">Sammanfattning</h2>
+            <h2 class="text-lg font-semibold">
+              Sammanfattning
+            </h2>
           </template>
 
           <div class="space-y-4">
@@ -168,12 +240,26 @@ function removeItem(itemId: string) {
 
           <template #footer>
             <div class="space-y-2">
-              <UButton color="primary" class="w-full" block>
-                <UIcon name="i-lucide-external-link" class="mr-2 h-4 w-4" />
+              <UButton
+                color="primary"
+                class="w-full"
+                block
+              >
+                <UIcon
+                  name="i-lucide-external-link"
+                  class="mr-2 h-4 w-4"
+                />
                 Öppna i butiken
               </UButton>
-              <UButton variant="outline" class="w-full" block>
-                <UIcon name="i-lucide-copy" class="mr-2 h-4 w-4" />
+              <UButton
+                variant="outline"
+                class="w-full"
+                block
+              >
+                <UIcon
+                  name="i-lucide-copy"
+                  class="mr-2 h-4 w-4"
+                />
                 Kopiera lista
               </UButton>
             </div>

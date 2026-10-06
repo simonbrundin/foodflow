@@ -38,7 +38,8 @@ export function useWeekPlan() {
     recipe: Recipe,
     dayOfWeek: number,
     servings: number = recipe.servings,
-    mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' = 'dinner'
+    mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' = 'dinner',
+    person?: string
   ): Promise<boolean> {
     try {
       await $fetch('/api/week-plan/recipes', {
@@ -47,7 +48,8 @@ export function useWeekPlan() {
           recipeId: recipe.id,
           dayOfWeek,
           servings,
-          mealType
+          mealType,
+          person
         }
       })
       await refresh()

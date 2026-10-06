@@ -18,31 +18,19 @@ const searchQuery = ref(props.ingredientType.name)
 const isSearching = ref(false)
 const searchResults = ref<StoreProduct[]>([])
 const selectedProduct = ref<StoreProduct | null>(null)
+const storeOptions = computed(() => props.stores.map(store => ({
+  label: store.name,
+  value: store.id
+})))
 
 // Fetch mappings for this ingredient type
 const { data: existingMappings } = await useFetch<ProductMapping[]>(
   `/api/mappings/${props.ingredientType.id}`
 )
 
-const hasMapping = computed(() => {
-  return (storeId: string) => {
-    return props.mappings.some(
-      m => m.ingredientTypeId === props.ingredientType.id && m.storeId === storeId
-    )
-  }
-})
-
-const getMapping = computed(() => {
-  return (storeId: string) => {
-    return props.mappings.find(
-      m => m.ingredientTypeId === props.ingredientType.id && m.storeId === storeId
-    )
-  }
-})
-
 async function searchProducts() {
   if (!selectedStoreId.value || !searchQuery.value) return
-  
+
   isSearching.value = true
   try {
     const response = await $fetch<StoreProduct[]>('/api/stores/search', {
@@ -63,7 +51,7 @@ async function searchProducts() {
 
 async function saveMapping() {
   if (!selectedProduct.value || !selectedStoreId.value) return
-  
+
   try {
     const mapping = await $fetch<ProductMapping>('/api/mappings', {
       method: 'POST',
@@ -102,7 +90,10 @@ function selectProduct(product: StoreProduct) {
         class="rounded-lg p-2 hover:bg-gray-100"
         @click="emit('close')"
       >
-        <UIcon name="i-lucide-x" class="h-5 w-5 text-gray-500" />
+        <UIcon
+          name="i-lucide-x"
+          class="h-5 w-5 text-gray-500"
+        />
       </button>
     </div>
 
@@ -114,14 +105,19 @@ function selectProduct(product: StoreProduct) {
         </label>
         <USelect
           v-model="selectedStoreId"
-          :options="stores.map(s => ({ label: s.name, value: s.id }))"
+          :items="storeOptions"
           class="w-full"
         />
       </div>
 
       <!-- Existing mappings -->
-      <div v-if="existingMappings && existingMappings.length > 0" class="mb-4">
-        <h4 class="mb-2 text-sm font-medium text-gray-700">Befintliga mappningar</h4>
+      <div
+        v-if="existingMappings && existingMappings.length > 0"
+        class="mb-4"
+      >
+        <h4 class="mb-2 text-sm font-medium text-gray-700">
+          Befintliga mappningar
+        </h4>
         <div class="space-y-2">
           <div
             v-for="mapping in existingMappings"
@@ -133,7 +129,11 @@ function selectProduct(product: StoreProduct) {
               <span class="mx-2 text-gray-400">→</span>
               <span>{{ mapping.storeProductName }}</span>
             </div>
-            <UBadge v-if="mapping.isDefault" color="emerald" size="sm">
+            <UBadge
+              v-if="mapping.isDefault"
+              color="emerald"
+              size="sm"
+            >
               Standard
             </UBadge>
           </div>
@@ -163,7 +163,10 @@ function selectProduct(product: StoreProduct) {
       </div>
 
       <!-- Search results -->
-      <div v-if="searchResults.length > 0" class="mb-4 space-y-2">
+      <div
+        v-if="searchResults.length > 0"
+        class="mb-4 space-y-2"
+      >
         <h4 class="text-sm font-medium text-gray-700">
           Resultat (sorterade på jämförelsepris)
         </h4>
@@ -176,28 +179,49 @@ function selectProduct(product: StoreProduct) {
             @click="selectProduct(product)"
           >
             <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded bg-gray-100">
-              <UIcon name="i-lucide-package" class="h-5 w-5 text-gray-400" />
+              <UIcon
+                name="i-lucide-package"
+                class="h-5 w-5 text-gray-400"
+              />
             </div>
             <div class="min-w-0 flex-1">
-              <p class="truncate text-sm font-medium">{{ product.name }}</p>
-              <p v-if="product.brand" class="text-xs text-gray-500">{{ product.brand }}</p>
+              <p class="truncate text-sm font-medium">
+                {{ product.name }}
+              </p>
+              <p
+                v-if="product.brand"
+                class="text-xs text-gray-500"
+              >
+                {{ product.brand }}
+              </p>
             </div>
             <div class="text-right">
-              <p class="text-sm font-medium">{{ product.price.toFixed(2) }} kr</p>
-              <p class="text-xs text-emerald-600">{{ product.pricePerKg.toFixed(2) }} kr/kg</p>
+              <p class="text-sm font-medium">
+                {{ product.price.toFixed(2) }} kr
+              </p>
+              <p class="text-xs text-emerald-600">
+                {{ product.pricePerKg.toFixed(2) }} kr/kg
+              </p>
             </div>
           </button>
         </div>
       </div>
 
       <!-- Selected product -->
-      <div v-if="selectedProduct" class="rounded-lg bg-emerald-50 p-4">
-        <h4 class="mb-2 text-sm font-medium text-emerald-800">Vald produkt</h4>
+      <div
+        v-if="selectedProduct"
+        class="rounded-lg bg-emerald-50 p-4"
+      >
+        <h4 class="mb-2 text-sm font-medium text-emerald-800">
+          Vald produkt
+        </h4>
         <div class="flex items-center justify-between">
           <div>
-            <p class="font-medium text-emerald-900">{{ selectedProduct.name }}</p>
+            <p class="font-medium text-emerald-900">
+              {{ selectedProduct.name }}
+            </p>
             <p class="text-sm text-emerald-700">
-              {{ selectedProduct.brand || 'Ingen märke' }} • 
+              {{ selectedProduct.brand || 'Ingen märke' }} •
               {{ selectedProduct.price.toFixed(2) }} kr/{{ selectedProduct.unit }} •
               {{ selectedProduct.pricePerKg.toFixed(2) }} kr/kg
             </p>
@@ -208,7 +232,10 @@ function selectProduct(product: StoreProduct) {
 
     <!-- Footer -->
     <div class="flex justify-end gap-2 border-t px-6 py-4">
-      <UButton variant="ghost" @click="emit('close')">
+      <UButton
+        variant="ghost"
+        @click="emit('close')"
+      >
         Avbryt
       </UButton>
       <UButton

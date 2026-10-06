@@ -18,6 +18,7 @@ export function useDebounceFn<T extends (...args: unknown[]) => unknown>(
     isPending.value = true
     timeoutId.value = setTimeout(() => {
       fn(...args)
+      timeoutId.value = null
       isPending.value = false
     }, delay)
   }
@@ -31,7 +32,7 @@ export function useDebounceFn<T extends (...args: unknown[]) => unknown>(
     }
   }
 
-  // Flush immediately
+  // Flush immediately using the arguments from the current call.
   const flush = (...args: Parameters<T>) => {
     cancel()
     fn(...args)

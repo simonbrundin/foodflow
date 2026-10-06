@@ -16,14 +16,14 @@ const emit = defineEmits<{
 // Local editable state
 const isEditing = ref(false)
 const editedAmount = ref(props.ingredient.amount)
-const editedUnit = ref(props.ingredient.unit)
+const editedUnit = ref(props.ingredient.unitId)
 const editedNotes = ref(props.ingredient.notes || '')
 
 // Debounced save (like Dinnia's v-debounce directive)
-const { debouncedFn, isPending } = useDebounceFn(async () => {
+const { debouncedFn, flush, isPending } = useDebounceFn(async () => {
   emit('update', props.ingredient.id, {
     amount: editedAmount.value,
-    unit: editedUnit.value,
+    unitId: editedUnit.value,
     notes: editedNotes.value || undefined
   })
 }, 1000)
@@ -31,12 +31,12 @@ const { debouncedFn, isPending } = useDebounceFn(async () => {
 function startEdit() {
   isEditing.value = true
   editedAmount.value = props.ingredient.amount
-  editedUnit.value = props.ingredient.unit
+  editedUnit.value = props.ingredient.unitId
   editedNotes.value = props.ingredient.notes || ''
 }
 
 function saveAndClose() {
-  debouncedFn.flush()
+  flush()
   isEditing.value = false
 }
 
@@ -44,7 +44,7 @@ function cancelEdit() {
   isEditing.value = false
   // Reset to original values
   editedAmount.value = props.ingredient.amount
-  editedUnit.value = props.ingredient.unit
+  editedUnit.value = props.ingredient.unitId
   editedNotes.value = props.ingredient.notes || ''
 }
 
@@ -85,7 +85,7 @@ const unitOptions = [
       <div class="flex-1">
         <div class="flex items-center gap-2">
           <span class="font-medium">{{ scaledAmount || ingredient.amount }}</span>
-          <span class="text-gray-600">{{ ingredient.unit }}</span>
+          <span class="text-gray-600">{{ ingredient.unitId }}</span>
           <span class="text-gray-800">{{ ingredient.ingredientTypeName || ingredient.ingredientTypeId }}</span>
         </div>
         <span
