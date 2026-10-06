@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foodflow-chartdb
+  labels:
+    app: foodflow-chartdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: foodflow-chartdb
+  template:
+    metadata:
+      labels:
+        app: foodflow-chartdb
+    spec:
+      containers:
+        - name: chartdb
+          image: ghcr.io/chartdb/chartdb:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"

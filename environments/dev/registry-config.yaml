@@ -1,0 +1,6 @@
+# Local Docker registry for Foodflow development
+# Usage: ctlptl apply -f registry-config.yaml
+apiVersion: ctlptl.dev/v1alpha1
+kind: Registry
+name: foodflow-registry
+port: 5001

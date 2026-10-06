@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: foodflow-chartdb-service
+  labels:
+    app: foodflow-chartdb
+spec:
+  selector:
+    app: foodflow-chartdb
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
