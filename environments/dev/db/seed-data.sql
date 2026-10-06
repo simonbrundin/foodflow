@@ -1,5 +1,5 @@
--- Seed data for development
--- This data is loaded after the schema is created
+-- ⚠️ DEPRECATED: Manual seed SQL is stale — use server/utils/seed-*.ts instead.
+-- Seed data is now managed programmatically by Nitro on server startup.
 
 -- Insert ingredient types
 INSERT INTO ingredient_types (name, category, unit) VALUES
