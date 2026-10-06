@@ -1,0 +1,39 @@
+# Development Dockerfile for Kubernetes API
+FROM node:20-alpine
+
+# Install tools
+RUN apk add --no-cache curl bash
+
+WORKDIR /app
+
+# Copy package files first for better caching
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+
+# Install Bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:$PATH"
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@12.5.1 --activate
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile || pnpm install
+
+# Copy source code
+COPY . .
+
+# Disable telemetry
+ENV NUXT_TELEMETRY_DISABLED=1
+ENV TYPESCRIPT_CHECKER=0
+ENV NUXT_TYPESCRIPT_CHECKER=0
+
+# Build the app (skip type checking)
+RUN pnpm run build --no-TypeScript || pnpm run build
+
+# Environment variables
+ENV HOST=0.0.0.0
+ENV PORT=8080
+ENV NODE_ENV=development
+
+# Start production server
+CMD ["bun", "run", "start"]

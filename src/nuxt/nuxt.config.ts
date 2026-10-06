@@ -4,7 +4,13 @@
 import { fileURLToPath } from 'node:url'
 
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/ui', '@nuxt/image', '@pinia/nuxt', 'nuxt-auth-utils'],
+  modules: [
+    // '@nuxt/eslint', // Disabled: eslint-typegen bug causes build failure
+    '@nuxt/ui',
+    '@nuxt/image',
+    '@pinia/nuxt',
+    'nuxt-auth-utils'
+  ],
   // `~` / `~~` hanteras automatiskt av Nuxt 4 från rootDir — inga absoluta paths.
 
   devtools: {
@@ -67,14 +73,5 @@ export default defineNuxtConfig({
     compatibilityVersion: 4
   },
 
-  compatibilityDate: '2026-06-30',
-
-  eslint: {
-    config: {
-      stylistic: {
-        commaDangle: 'never',
-        braceStyle: '1tbs'
-      }
-    }
-  }
+  compatibilityDate: '2026-06-30'
 })
